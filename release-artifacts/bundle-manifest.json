@@ -1,19 +1,31 @@
 {
-  "generatedAt": "2026-07-16T08:03:40.205Z",
+  "generatedAt": "2026-07-25T04:05:29.777Z",
   "root": "E:\\Projects\\Thinking in Notes\\yansilu\\release-artifacts",
-  "totalFiles": 2,
+  "totalFiles": 4,
   "items": [
     {
+      "file": "yansilu_0.1.1-beta.1_x64-setup.dmg",
+      "bytes": 165603822,
+      "modifiedAt": "2026-07-25T01:41:49.974Z",
+      "sha256": "F9D90FEA0839B3BE1AE984339A372FF01E23D289FE1549E8E9922929C209A306"
+    },
+    {
+      "file": "yansilu_0.1.1-beta.1_x64-setup.dmg.sig",
+      "bytes": 428,
+      "modifiedAt": "2026-07-25T04:04:42.382Z",
+      "sha256": "D7E912C3C3B46545B1AAA7E72798A45E85DA23BFC36C61AC4CA74B55E11D7FD0"
+    },
+    {
       "file": "yansilu_0.1.1-beta.1_x64-setup.exe",
-      "bytes": 33102784,
-      "modifiedAt": "2026-07-16T08:00:24.725Z",
-      "sha256": "507CB6AA042544FC58B8FAEE27ABF98F49104235C9B1275A711F63372D46B50D"
+      "bytes": 33982243,
+      "modifiedAt": "2026-07-25T04:03:59.617Z",
+      "sha256": "B8DA0E607679AD0CDB6668C72354A2B19ADB22DAE5DF042E284F72835B2F7536"
     },
     {
       "file": "yansilu_0.1.1-beta.1_x64-setup.exe.sig",
       "bytes": 428,
-      "modifiedAt": "2026-07-16T08:00:25.141Z",
-      "sha256": "8B012A56EEBFB9FD123625A995FA13AB90AB87F39B2446FAE747E5F81048345D"
+      "modifiedAt": "2026-07-25T04:04:40.663Z",
+      "sha256": "EE13A00D3E09366146D6B03C6C2096978D6E6AA965BE012B1E6C4D7D7A5940BA"
     }
   ]
 }
