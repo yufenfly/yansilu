@@ -12,13 +12,13 @@ import {
 
 export function resetGraphDemoPresentationStateForRuntime(graphState = {}, deps = {}) {
   const setRelationTypeFilter = deps.setRelationTypeFilter || (() => {});
-  setRelationTypeFilter("meaningful", { persist: false });
+  setRelationTypeFilter("all", { persist: false });
   graphState.readingLens = "insight";
   graphState.focusDepth = "1";
   graphState.selection = null;
   graphState.researchNavigatorHidden = true;
   graphState.researchNavigatorTouched = true;
-  graphState.zoom = "fit";
+  graphState.zoom = "detail";
   graphState.expanded = false;
   graphState.workbenchPanelOpen = false;
   graphState.workbenchPanelTab = "clues";

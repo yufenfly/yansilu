@@ -12,13 +12,13 @@ export const SMART_NOTES_DEMO_WALKTHROUGH_STEPS = [
     title: "把记录说成自己的判断",
     note: "先看一条材料怎样经过转述，变成可以长期复用的观点。",
     action: "open-demo-note",
-    targetNoteId: "PERM-WRITING-STARTS-BEFORE-DRAFT",
+    targetNoteId: "PERM-PARAPHRASE-BEFORE-JUDGMENT",
     noteIds: [
       "GUIDE-SMART-NOTES-START",
       "SRC-SMART-NOTES",
       "FN-PHONE-CAPTURE-UNPROCESSED",
-      "LN-WRITING-AS-DAILY-PRACTICE",
-      "PERM-WRITING-STARTS-BEFORE-DRAFT"
+      "LN-PARAPHRASE-IS-FIRST-CHECK",
+      "PERM-PARAPHRASE-BEFORE-JUDGMENT"
     ]
   },
   {

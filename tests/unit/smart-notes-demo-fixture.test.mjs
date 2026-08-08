@@ -22,27 +22,28 @@ function relationPairKey(from = "", to = "") {
   return [String(from || "").trim(), String(to || "").trim()].sort().join("::");
 }
 
-test("Smart Notes Demo fixture teaches the current home-first beginner path", async () => {
+test("Smart Notes Demo fixture teaches one complete beginner knowledge chain", async () => {
   const fixture = await readFixture();
   const allText = JSON.stringify(fixture);
 
   assert.doesNotMatch(allText, /PN-SN|WP-SN|IC-SN/);
   assert.doesNotMatch(allText, /今日整理/);
-  assert.doesNotMatch(allText, /备份与恢复比导入导出更重要|未来产品路线可以从笔记中长出来/);
-  assert.match(allText, /首页/);
+  assert.match(allText, /记录材料 -> 用自己的话转述 -> 形成一条判断/);
 
-  assert.ok(fixture.permanent_notes.some((note) => note.id === "PERM-DEMO-FIRST-RUN-RECOMMENDED"));
-  assert.ok(fixture.index_cards.some((card) => card.id === "THEME-DEMO-FIRST-RUN"));
-  assert.ok(fixture.permanent_notes.some((note) => note.id === "PERM-HELP-SHOULD-FOLLOW-TASKS"));
-  assert.ok(fixture.permanent_notes.some((note) => note.id === "PERM-BEST-PATH-STARTS-FROM-HOME"));
-  assert.ok(fixture.index_cards.some((card) => card.id === "THEME-HELP-BEST-PATH"));
-  assert.ok(fixture.guide_notes.some((note) => note.id === "GUIDE-HELP-TASKS"));
-  assert.ok(fixture.guide_notes.some((note) => note.id === "GUIDE-BACKUP-MOBILE-AI"));
+  for (const id of [
+    "PERM-FLEETING-NOTE-IS-CAPTURE",
+    "PERM-PARAPHRASE-BEFORE-JUDGMENT",
+    "PERM-PERMANENT-NOTE-IS-JUDGMENT",
+    "PERM-RELATION-REASON-MATTERS",
+    "PERM-THEME-INDEX-IS-ENTRY",
+    "PERM-WRITING-CENTER-FROM-CONFIRMED-NOTES"
+  ]) assert.ok(fixture.permanent_notes.some((note) => note.id === id), `missing ${id}`);
+  assert.ok(fixture.index_cards.some((card) => card.id === "THEME-WHY-LINK-NOTES"));
+  assert.ok(fixture.guide_notes.some((note) => note.id === "GUIDE-SMART-NOTES-START"));
   assert.ok(fixture.fleeting_notes.some((note) => note.status === "needs_processing"));
   assert.ok(fixture.literature_notes.some((note) => note.status === "needs_processing"));
-  assert.ok(fixture.relations.some((relation) => relation.from === "PERM-DEMO-FIRST-RUN-RECOMMENDED"));
-  assert.ok(fixture.relations.some((relation) => relation.from === "PERM-HELP-SHOULD-FOLLOW-TASKS"));
-  assert.ok(fixture.relations.some((relation) => relation.from === "PERM-BEST-PATH-STARTS-FROM-HOME"));
+  assert.ok(fixture.relations.some((relation) => relation.from === "PERM-PERMANENT-NOTE-IS-JUDGMENT"));
+  assert.ok(fixture.relations.some((relation) => relation.from === "PERM-THEME-INDEX-IS-ENTRY"));
   assert.ok(fixture.writing_projects.length > 0);
   assert.ok(fixture.draft_scaffolds.length > 0);
   const demoProject = fixture.writing_projects.find((project) => project.id === "WRITE-SMART-NOTES-DEMO");
@@ -71,7 +72,7 @@ test("Smart Notes Demo turns permanent-note wikilinks into lightweight body rela
   assert.ok(bodyRelations.length > 0);
   assert.ok(bodyRelations.every((relation) => relation.relationType === "associated_with"));
   assert.ok(bodyRelations.every((relation) => relation.rationale === "markdown_wikilink"));
-  assert.ok(manualRelations.length >= 40);
+  assert.ok(manualRelations.length >= 8);
   assert.ok(manualRelations.every((relation) => relation.rationale && relation.rationale !== "markdown_wikilink"));
 });
 
@@ -84,23 +85,11 @@ test("Smart Notes Demo keeps a named permanent note for relation practice", asyn
   assert.match(practiceNote?.body || "", /选择关系类型并写清为什么相关/);
 });
 
-test("Smart Notes Demo teaches current contextual AI without making it a required path", async () => {
+test("Smart Notes Demo keeps optional product explanations out of the first practice path", async () => {
   const fixture = await readFixture();
   const allText = JSON.stringify(fixture);
 
-  for (const id of [
-    "PERM-AI-DISTILL-DRAFT",
-    "PERM-AI-RELATION-EXPLAINS-WHY",
-    "PERM-AI-WRITING-CHECK-DOES-NOT-REWRITE",
-    "PERM-AI-SHOULD-ASK-FOR-CONFIRMATION"
-  ]) {
-    assert.ok(fixture.permanent_notes.some((note) => note.id === id), `missing current AI teaching note ${id}`);
-  }
-
-  assert.match(allText, /帮我提炼/);
-  assert.match(allText, /候选关联/);
-  assert.match(allText, /生成提纲/);
-  assert.match(allText, /检查/);
-  assert.match(allText, /不用 AI 也能完整使用|没有 AI 也能走完整主流程/);
-  assert.match(allText, /确认/);
+  assert.doesNotMatch(allText, /候选队列|复核队列|模型配置/);
+  assert.ok(fixture.writing_projects.every((project) => project.basketNoteIds.length > 0));
+  assert.equal(fixture.writing_projects.length, 1);
 });

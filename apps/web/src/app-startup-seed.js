@@ -2,6 +2,7 @@ import {
   runConfirmedSmartNotesDemoImport
 } from "./smart-notes-demo-import-flow.js";
 import {
+  SMART_NOTES_DEMO_GUIDE_DIRECTORY_ID,
   smartNotesDemoExistingFolder,
   smartNotesDemoOpenedExistingGuideStatus,
   smartNotesDemoStartupNoteId
@@ -55,9 +56,11 @@ export async function openInitialStartupRouteForRuntime(deps = {}) {
         state.browserRootId = rootBoxIdFromFolder(state, demoFolder.id);
         state.selectedFolderId = demoFolder.id;
         await syncNotesForDirectory(demoFolder.id);
+        await syncNotesForDirectory(SMART_NOTES_DEMO_GUIDE_DIRECTORY_ID);
         const guideNoteId = smartNotesDemoStartupNoteId({ notes: state.notes });
         if (guideNoteId) {
           state.selectedFileId = guideNoteId;
+          activateModule("explorer");
           openNoteById(guideNoteId, { preferTitleSelection: false });
           setStatus(smartNotesDemoOpenedExistingGuideStatus(), "ok");
           return { route: "existing_demo", noteId: guideNoteId };

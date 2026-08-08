@@ -53,12 +53,69 @@ const permanentDefinitions = [
   ["PERM-AI-WRITING-CHECK-DOES-NOT-REWRITE", "AI 检查应该指出缺口，而不是重写整篇文章", "AI", "写作检查最有价值的是指出证据、反方、边界和结构缺口。", "用户可以采纳单条建议，不必接受整篇改写。", "检查结果不是事实判断，仍需核对来源。", ["好提纲需要证据、反方和边界", "AI 只能提出候选，保存前必须由用户确认"]]
 ];
 
+// The default Demo is a practice set, not a second knowledge base. These notes
+// form one complete, visible chain from capture to a traceable writing outline.
+const CORE_PERMANENT_IDS = new Set([
+  "PERM-WRITING-STARTS-BEFORE-DRAFT",
+  "PERM-PARAPHRASE-BEFORE-JUDGMENT",
+  "PERM-PERMANENT-NOTE-IS-JUDGMENT",
+  "PERM-RELATION-REASON-MATTERS",
+  "PERM-SUPPORT-RELATION-BECOMES-EVIDENCE",
+  "PERM-CONTRAST-RELATION-CREATES-ARGUMENT",
+  "PERM-BOUNDARY-MAKES-NOTE-RELIABLE",
+  "PERM-COMPOUND-INTEREST-FROM-REUSE",
+  "PERM-THEME-INDEX-IS-ENTRY",
+  "PERM-INDEX-CARD-IS-LIVING-OUTLINE",
+  "PERM-WRITING-CENTER-FROM-CONFIRMED-NOTES",
+  "PERM-OUTLINE-NEEDS-EVIDENCE-COUNTERPOINT-BOUNDARY",
+  "PERM-UNLINKED-PRACTICE",
+  "PERM-FLEETING-NOTE-IS-CAPTURE"
+]);
+const CORE_PERMANENT_TITLES = new Set(
+  permanentDefinitions.filter(([id]) => CORE_PERMANENT_IDS.has(id)).map(([, title]) => title)
+);
+const CORE_LITERATURE_IDS = new Set([
+  "LN-WRITING-AS-DAILY-PRACTICE",
+  "LN-PARAPHRASE-IS-FIRST-CHECK",
+  "LN-PERMANENT-NOTE-AS-OWNED-CLAIM",
+  "LN-LINKING-NEEDS-REASON"
+]);
+const CORE_FLEETING_IDS = new Set([
+  "FN-PHONE-CAPTURE-UNPROCESSED",
+  "FN-WRITING-CENTER-PROCESSED",
+  "FN-RELATION-REASON-UNLINKED"
+]);
+const CORE_INDEX_IDS = new Set([
+  "THEME-WHAT-IS-PERMANENT-NOTE",
+  "THEME-WHY-LINK-NOTES",
+  "THEME-INDEX-TO-WRITING"
+]);
+const MATERIAL_TO_JUDGMENT_IDS = new Set([
+  "PERM-FLEETING-NOTE-IS-CAPTURE",
+  "PERM-PARAPHRASE-BEFORE-JUDGMENT",
+  "PERM-PERMANENT-NOTE-IS-JUDGMENT",
+  "PERM-BOUNDARY-MAKES-NOTE-RELIABLE"
+]);
+const RELATION_AND_REUSE_IDS = new Set([
+  "PERM-RELATION-REASON-MATTERS",
+  "PERM-SUPPORT-RELATION-BECOMES-EVIDENCE",
+  "PERM-CONTRAST-RELATION-CREATES-ARGUMENT",
+  "PERM-COMPOUND-INTEREST-FROM-REUSE",
+  "PERM-UNLINKED-PRACTICE"
+]);
+
+function demoClusterFor(id) {
+  if (MATERIAL_TO_JUDGMENT_IDS.has(id)) return "材料到判断";
+  if (RELATION_AND_REUSE_IDS.has(id)) return "关系与复利";
+  return "主题到写作";
+}
+
 const literatureDefinitions = [
   ["LN-WRITING-AS-DAILY-PRACTICE", "阅读一开始就要面向未来写作", "写作不是最后打开文档才开始，阅读时就要问材料未来能回答什么问题。", ["PERM-WRITING-STARTS-BEFORE-DRAFT", "PERM-WRITING-CENTER-FROM-CONFIRMED-NOTES"], "converted"],
   ["LN-CAPTURE-NEEDS-FOLLOWUP", "临时记录必须承诺下一步", "随笔只负责捕捉，之后要转述、形成判断、建立关系或删除。", ["PERM-FLEETING-NOTE-IS-CAPTURE", "PERM-TODAY-REVIEW-REWARDS-PROCESSING"], "converted"],
   ["LN-PARAPHRASE-IS-FIRST-CHECK", "用自己的话重说，才能检查理解", "文献笔记的第一步不是摘录更多，而是把材料说成自己的话。", ["PERM-PARAPHRASE-BEFORE-JUDGMENT", "PERM-OWN-WORDS-ARE-FIRST-THINKING"], "converted"],
   ["LN-PERMANENT-NOTE-AS-OWNED-CLAIM", "永久笔记要能脱离原文使用", "永久笔记应表达用户愿意继续使用、修改或反驳的判断。", ["PERM-PERMANENT-NOTE-IS-JUDGMENT", "PERM-ATOMIC-NOTE-ANSWERS-ONE-QUESTION"], "converted"],
-  ["LN-LINKING-NEEDS-REASON", "新笔记要进入旧网络", "连接不是为了让图谱变密，而是为未来阅读留下理由。", ["PERM-RELATION-REASON-MATTERS", "PERM-RELATION-TYPE-IS-A-READING-INSTRUCTION"], "converted"],
+  ["LN-LINKING-NEEDS-REASON", "新笔记要进入旧网络", "连接不是为了让图谱变密，而是为未来阅读留下理由。", ["PERM-RELATION-REASON-MATTERS", "PERM-RELATION-TYPE-IS-A-READING-INSTRUCTION"], "needs_processing"],
   ["LN-INDEX-AS-QUESTION-ENTRY", "主题索引围绕问题组织笔记", "索引应让用户重新进入问题，而不是完成一次分类。", ["PERM-THEME-INDEX-IS-ENTRY", "PERM-INDEX-CARD-STARTS-WITH-CENTRAL-QUESTION"], "converted"],
   ["LN-REUSE-CREATES-COMPOUND-INTEREST", "旧笔记在新问题中产生复利", "知识复利来自旧判断被新主题和新文章重新调用。", ["PERM-COMPOUND-INTEREST-FROM-REUSE"], "converted"],
   ["LN-AI-KEEPS-CANDIDATE-STATE", "AI 参与时要保留候选状态", "AI 可以帮助提炼、关联和写作，但结果必须可检查、可改写、可忽略。", ["PERM-AI-SUGGESTION-IS-CANDIDATE", "PERM-AI-SHOULD-ASK-FOR-CONFIRMATION"], "converted"],
@@ -94,13 +151,14 @@ const indexDefinitions = [
 ];
 
 function permanentNote([id, title, cluster, thesis, product, boundary, links]) {
-  const related = links.map((item) => `- [[${item}]]`).join("\n");
+  const related = links.filter((item) => CORE_PERMANENT_TITLES.has(item)).map((item) => `- [[${item}]]`).join("\n");
+  const demoCluster = demoClusterFor(id);
   return {
     id,
     note_type: "permanent",
     title,
-    cluster: cluster.toLowerCase(),
-    cluster_label: cluster,
+    cluster: demoCluster,
+    cluster_label: demoCluster,
     status: "active",
     distillation_status: "confirmed",
     thesis,
@@ -108,7 +166,7 @@ function permanentNote([id, title, cluster, thesis, product, boundary, links]) {
     productImplication: product,
     boundaryOrCounterpoint: boundary,
     from_literature_note_ids: [],
-    tags: ["永久笔记", cluster, "Smart Notes Demo"],
+    tags: ["永久笔记", demoCluster, "Smart Notes Demo"],
     body: `# ${title}\n\n## 核心判断\n${thesis}\n\n## 为什么\n${product}\n\n## 边界\n${boundary}\n\n## 继续看\n${related}`,
     core_claim: thesis,
     rationale: product,
@@ -121,6 +179,7 @@ function permanentNote([id, title, cluster, thesis, product, boundary, links]) {
 
 function literatureNote([id, title, paraphrase, candidates, status]) {
   const permanentById = new Map(permanentDefinitions.map((item) => [item[0], item[1]]));
+  const availableCandidates = candidates.filter((candidate) => CORE_PERMANENT_IDS.has(candidate));
   return {
     id,
     note_type: "literature",
@@ -130,11 +189,11 @@ function literatureNote([id, title, paraphrase, candidates, status]) {
     tags: ["文献笔记", "Smart Notes Demo"],
     paraphrase_text: paraphrase,
     my_takeaway: `这段材料提醒我：${paraphrase}`,
-    candidate_permanent_notes: candidates,
+    candidate_permanent_notes: availableCandidates,
     quote_text: "只保留方法主题和原创转述，不复刻原文。",
     questions: ["这条材料能支撑哪一个我愿意承担的判断？"],
-    body: `# ${title}\n\n## 来源\n[[《卡片笔记写作法》方法边界]]\n\n## 我的转述\n${paraphrase}\n\n## 可转换为永久笔记\n${candidates.map((candidate) => `- [[${permanentById.get(candidate)}]]`).join("\n")}\n\n## 状态\n${status === "converted" ? "已转换，可继续检查关联。" : "待处理：先确认理解，再决定是否转换。"}`,
-    conversion_decision: { status, conversion_reason: status === "converted" ? "已经形成永久笔记。" : "等待用户确认。", key_note_id: candidates[0] || "" }
+    body: `# ${title}\n\n## 来源\n[[《卡片笔记写作法》方法边界]]\n\n## 我的转述\n${paraphrase}\n\n## 可转换为永久笔记\n${availableCandidates.map((candidate) => `- [[${permanentById.get(candidate)}]]`).join("\n")}\n\n## 状态\n${status === "converted" ? "已转换，可继续检查关联。" : "待处理：先确认理解，再决定是否转换。"}`,
+    conversion_decision: { status, conversion_reason: status === "converted" ? "已经形成永久笔记。" : "等待用户确认。", key_note_id: availableCandidates[0] || "" }
   };
 }
 
@@ -155,7 +214,8 @@ function fleetingNote([id, title, idea, status, processedInto]) {
 
 function indexCard([id, title, question, noteIds]) {
   const titleById = new Map(permanentDefinitions.map((item) => [item[0], item[1]]));
-  const links = noteIds.map((noteId, index) => `${index + 1}. [[${titleById.get(noteId)}]]`).join("\n");
+  const availableNoteIds = noteIds.filter((noteId) => CORE_PERMANENT_IDS.has(noteId));
+  const links = availableNoteIds.map((noteId, index) => `${index + 1}. [[${titleById.get(noteId)}]]`).join("\n");
   return {
     id,
     index_type: "topic",
@@ -164,12 +224,12 @@ function indexCard([id, title, question, noteIds]) {
     thesis: question,
     threeLineSummary: ["先看中心问题。", "再读关键笔记。", "能形成结构时进入写作中心。"],
     summary: `围绕“${question}”组织关键笔记。`,
-    item_note_ids: noteIds,
-    noteIds,
+    item_note_ids: availableNoteIds,
+    noteIds: availableNoteIds,
     tags: ["主题索引", "Smart Notes Demo"],
     ordering_strategy: "manual",
-    key_note_ids: noteIds.slice(0, 1),
-    items: noteIds.map((noteId, index) => ({ note_id: noteId, order: index + 1, rationale: `第 ${index + 1} 步读 [[${titleById.get(noteId)}]]。` })),
+    key_note_ids: availableNoteIds.slice(0, 1),
+    items: availableNoteIds.map((noteId, index) => ({ note_id: noteId, order: index + 1, rationale: `第 ${index + 1} 步读 [[${titleById.get(noteId)}]]。` })),
     template: { type: "index_card" },
     body: `# ${title}\n\n## 中心问题\n${question}\n\n## 关键笔记\n${links}\n\n## 下一步\n如果这组笔记已经能回答中心问题，就从主题进入写作中心。`
   };
@@ -191,6 +251,7 @@ const relationSeeds = [
   ["AI-RELATION", "PERM-AI-RELATION-EXPLAINS-WHY", "PERM-RELATION-REASON-MATTERS", "supports", "候选关联说明理由，才能真正帮助用户判断关系。"],
   ["AI-WRITING", "PERM-AI-WRITING-CHECK-DOES-NOT-REWRITE", "PERM-OUTLINE-NEEDS-EVIDENCE-COUNTERPOINT-BOUNDARY", "supports", "AI 检查指出证据和边界缺口，支撑完整提纲。"],
   ["CONTRADICTION", "PERM-CONTRAST-RELATION-CREATES-ARGUMENT", "PERM-AI-SUGGESTION-IS-CANDIDATE", "contradicts", "AI 自动替用户定论会削弱反方审视，因此必须保留人工判断。"],
+  ["COUNTERPOINT", "PERM-CONTRAST-RELATION-CREATES-ARGUMENT", "PERM-PERMANENT-NOTE-IS-JUDGMENT", "contradicts", "反方笔记会迫使原判断说明自己在哪些条件下成立。"],
   ["BRIDGE", "PERM-BRIDGE-RELATION-FINDS-NEW-THEME", "PERM-INDEX-CARD-STARTS-WITH-CENTRAL-QUESTION", "bridges", "桥接线索常会产生新的中心问题，进而形成主题。"],
   ["EXAMPLE", "PERM-EXAMPLE-RELATION-MAKES-ABSTRACT-USABLE", "PERM-SUPPORT-RELATION-BECOMES-EVIDENCE", "complements", "例子补充支持关系，让抽象证据变得可理解。"],
   ["WRITING-ROLE", "PERM-WRITING-USES-RELATION-ROLES", "PERM-WRITING-CENTER-FROM-CONFIRMED-NOTES", "supports", "关系角色为写作中心组织提纲提供结构。"],
@@ -287,18 +348,21 @@ function safeRelationIdPart(value = "") {
 }
 
 function manualRelations() {
-  return relationSeeds.map(([suffix, from, to, relationType, rationale], index) => ({
-    id: existingRelationIds[index] || `REL-DEMO-V3-${String(index + 1).padStart(2, "0")}-${suffix}`,
-    from,
-    to,
-    relationType,
-    status: "confirmed",
-    rationale,
-    source: "manual",
-    relationSource: "manual",
-    insight_question: "这条关系在以后思考或写作时，可以作为证据、反方、边界、例子还是过渡？",
-    confidence: 1
-  }));
+  return relationSeeds.flatMap(([suffix, from, to, relationType, rationale], index) => {
+    if (!CORE_PERMANENT_IDS.has(from) || !CORE_PERMANENT_IDS.has(to)) return [];
+    return [{
+      id: existingRelationIds[index] || `REL-DEMO-V3-${String(index + 1).padStart(2, "0")}-${suffix}`,
+      from,
+      to,
+      relationType,
+      status: "confirmed",
+      rationale,
+      source: "manual",
+      relationSource: "manual",
+      insight_question: "这条关系在以后思考或写作时，可以作为证据、反方、边界、例子还是过渡？",
+      confidence: 1
+    }];
+  });
 }
 
 function wikilinkTargets(body = "") {
@@ -358,10 +422,10 @@ function buildRelations({ notes = [], permanentNotes = [] } = {}) {
 
 function writingProject() {
   const sections = [
-    ["把材料加工成自己的判断", ["PERM-CAPTURE-IS-INBOX-NOT-KNOWLEDGE", "PERM-PARAPHRASE-BEFORE-JUDGMENT", "PERM-PERMANENT-NOTE-IS-JUDGMENT"]],
-    ["为什么要写清关联", ["PERM-RELATION-REASON-MATTERS", "PERM-RELATION-TYPE-IS-A-READING-INSTRUCTION", "PERM-COMPOUND-INTEREST-FROM-REUSE"]],
+    ["把材料加工成自己的判断", ["PERM-FLEETING-NOTE-IS-CAPTURE", "PERM-PARAPHRASE-BEFORE-JUDGMENT", "PERM-PERMANENT-NOTE-IS-JUDGMENT"]],
+    ["为什么要写清关联", ["PERM-RELATION-REASON-MATTERS", "PERM-SUPPORT-RELATION-BECOMES-EVIDENCE", "PERM-COMPOUND-INTEREST-FROM-REUSE"]],
     ["主题如何进入写作", ["PERM-THEME-INDEX-IS-ENTRY", "PERM-INDEX-CARD-IS-LIVING-OUTLINE", "PERM-WRITING-CENTER-FROM-CONFIRMED-NOTES"]],
-    ["AI 怎样帮助但不替用户决定", ["PERM-AI-DISTILL-DRAFT", "PERM-AI-RELATION-EXPLAINS-WHY", "PERM-AI-SHOULD-ASK-FOR-CONFIRMATION"]]
+    ["为什么要保留反方和边界", ["PERM-CONTRAST-RELATION-CREATES-ARGUMENT", "PERM-BOUNDARY-MAKES-NOTE-RELIABLE", "PERM-OUTLINE-NEEDS-EVIDENCE-COUNTERPOINT-BOUNDARY"]]
   ].map(([title, noteIds], index) => ({ sectionId: `sec-${index + 1}`, title, goal: `用关键笔记说清“${title}”。`, noteTraceIds: noteIds, literatureTraceIds: [], keyNoteTraceIds: noteIds.slice(0, 1), openQuestion: "还需要补一个更具体的使用例子吗？", gap: "避免抽象术语，落到用户动作。", counterpoint: "这一步能否继续简化？" }));
   return {
     id: "WRITE-SMART-NOTES-DEMO",
@@ -371,29 +435,8 @@ function writingProject() {
     target_reader: "第一次使用研思录的人。",
     desired_reader_takeaway: "我能看见一条判断怎样带着来源和关系进入可追溯提纲，再开始写作。",
     basketNoteIds: sections.flatMap((section) => section.noteTraceIds),
-    indexCardIds: ["THEME-FIRST-USE", "THEME-WHY-LINK-NOTES", "THEME-INDEX-TO-WRITING", "THEME-PRODUCT-ROADMAP"],
+    indexCardIds: ["THEME-WHAT-IS-PERMANENT-NOTE", "THEME-WHY-LINK-NOTES", "THEME-INDEX-TO-WRITING"],
     keyNoteIds: ["PERM-PERMANENT-NOTE-IS-JUDGMENT", "PERM-RELATION-REASON-MATTERS", "PERM-WRITING-CENTER-FROM-CONFIRMED-NOTES"],
-    outline: sections,
-    template: { type: "writing_project", starting_point: "theme_index_and_confirmed_notes" }
-  };
-}
-
-function relationWritingProject() {
-  const sections = [
-    ["关系类型决定以后怎么读", ["PERM-RELATION-TYPE-IS-A-READING-INSTRUCTION", "PERM-LINK-TYPES-CREATE-DISCOVERY"]],
-    ["支持、反驳和限定怎样进入论证", ["PERM-SUPPORT-RELATION-BECOMES-EVIDENCE", "PERM-CONTRAST-RELATION-CREATES-ARGUMENT", "PERM-LIMIT-RELATION-PROTECTS-OVERCLAIM"]],
-    ["桥接怎样发现新主题", ["PERM-BRIDGE-RELATION-FINDS-NEW-THEME", "PERM-INDEX-CARD-STARTS-WITH-CENTRAL-QUESTION"]]
-  ].map(([title, noteIds], index) => ({ sectionId: `relation-sec-${index + 1}`, title, goal: title, noteTraceIds: noteIds, literatureTraceIds: [], keyNoteTraceIds: noteIds.slice(0, 1), openQuestion: "是否有更清楚的实际例子？", gap: "需要保持关系理由可读。", counterpoint: "关系类型不宜过细。" }));
-  return {
-    id: "WRITE-RELATION-TO-WRITING-PRACTICE",
-    title: "关系类型如何把笔记网络变成文章结构",
-    goal: "展示支持、反驳、限定和桥接关系如何进入提纲。",
-    intent: "写一篇简洁帮助文章。",
-    target_reader: "已经有永久笔记，但不知道关联有什么用的人。",
-    desired_reader_takeaway: "关系不是装饰，而是未来写作的结构线索。",
-    basketNoteIds: sections.flatMap((section) => section.noteTraceIds),
-    indexCardIds: ["THEME-RELATION-TYPES", "THEME-RELATION-TYPES-TO-WRITING", "THEME-WRITING-FROM-RELATIONS"],
-    keyNoteIds: ["PERM-RELATION-TYPE-IS-A-READING-INSTRUCTION", "PERM-WRITING-USES-RELATION-ROLES"],
     outline: sections,
     template: { type: "writing_project", starting_point: "theme_index_and_confirmed_notes" }
   };
@@ -425,52 +468,35 @@ function scaffold(project, id) {
 
 function guideNotes() {
   return [
-    ["GUIDE-SMART-NOTES-START", "00 从这里开始：10 分钟走完研思录", `你不用先学术语。照着 6 步试一遍：记录材料 -> 用自己的话转述 -> 形成一条判断 -> 写清关系理由 -> 组织主题 -> 查看可追溯提纲。\n\n1. 看 [[手机上先记一句：我总是收藏很多但不会用]]。\n2. 看 [[阅读一开始就要面向未来写作]]。\n3. 看 [[写作不是最后一步，而是整理笔记的方向]]。\n4. 打开 [[关系理由练习：给已有笔记补一条说明]]，先看正文链接和人工关系，再补一条自己的理由。\n5. 打开 [[03 为什么要建立关系？|为什么要关联笔记？]] 或 [[02 什么是永久笔记？|永久笔记是什么？]]。\n6. 从主题进入写作中心，查看示例提纲。\n\n今天只做一个动作也可以。先动手，再理解。`],
-    ["GUIDE-TODAY-NEXT-STEP", "01 今天先做哪一步？", "回到首页，只做最靠前的一个动作：处理材料、补一条关系、整理主题，或进入写作。"],
+    ["GUIDE-SMART-NOTES-START", "00 从这里开始：3 分钟看懂一条知识链", `你不用先学术语，只看一条链：记录材料 -> 用自己的话转述 -> 形成一条判断 -> 写清关系理由 -> 组织主题 -> 查看提纲。\n\n1. 看 [[手机上先记一句：我总是收藏很多但不会用]]。\n2. 看 [[用自己的话重说，才能检查理解]]，再看 [[永久笔记要能脱离原文使用]]。\n3. 打开 [[关系理由练习：给已有笔记补一条说明]]，选择一种关系并写一句理由。\n4. 打开 [[为什么要关联笔记？]]，再进入示例写作项目查看提纲。\n\n先跟着做一遍；不必一次理解全部功能。`],
+    ["GUIDE-TODAY-NEXT-STEP", "01 今天先做哪一步？", "先处理一条材料。写成自己的判断后，再补一条有理由的关系。"],
     ["GUIDE-WHAT-PERMANENT", "02 什么是永久笔记？", "永久笔记是一条你愿意承担的判断。标题说观点，正文写理由和边界。\n\n继续看：[[永久笔记是一条用户愿意承担的判断]]。"],
     ["GUIDE-WHY-RELATE", "03 为什么要建立关系？", "关联让两条判断互相解释。选择对象、关系类型，写一句为什么相关，然后保存。\n\n继续看：[[关系理由比连线本身更重要]]。"],
     ["GUIDE-WRITABLE-THEME", "04 什么是可写主题？", "当几条永久笔记能一起回答一个问题时，就可以整理成主题索引。\n\n继续看：[[主题索引不是文件夹，而是问题入口]]。"],
     ["GUIDE-INDEX-TO-WRITING", "05 怎么从主题进入写作中心？", "打开主题，确认中心问题和关键笔记，再进入写作中心生成提纲。提纲可修改，不会自动写成文章。"],
-    ["GUIDE-HELP-TASKS", "06 遇到问题先看这里：按任务找帮助", "帮助按你正在做的事组织：导入 Demo、处理材料、关联、主题、写作、手机访问和 AI 设置。"],
-    ["GUIDE-BACKUP-MOBILE-AI", "07 手机和 AI：先知道边界", "手机用来快速记录和轻量查看，复杂整理回到电脑。AI 用来提炼、推荐候选关联、生成提纲和检查草稿；不用 AI 也能完整使用。"],
-    ["GUIDE-RELATION-TYPES", "08 关系类型怎么选？", "支持是证据，反驳是反方，限定是边界，桥接连接两个问题，例子让抽象判断更具体。不确定时先选“相关”，理由要写清楚。"],
-    ["GUIDE-INDEX-PRACTICE", "09 主题索引怎么写？", "先写一个中心问题，再选三到七条关键笔记，调整阅读顺序。能形成结构时，就可以进入写作。"],
-    ["GUIDE-WRITING-FROM-RELATIONS", "10 从关系网络进入写作", "把支持关系放进证据，把反驳放进反方，把限定放进边界，把桥接放进过渡。写作中心会保留相关笔记供你检查。"],
-    ["GUIDE-DEMO-PRACTICE", "11 Demo 里可以怎么练习？", "处理一条随笔，确认一条永久笔记，建立一条关系，打开一个主题，再进入写作中心。AI 已配置时，可以试一次提炼或提纲；所有结果都要先确认。"]
+    ["GUIDE-RELATION-TYPES", "06 关系怎么选？", "先选“支持它”“不同意它”或“让我想到它”，再写一句为什么。更细的关系以后需要时再用。"]
   ].map(([id, title, content]) => ({ id, note_type: "guide", title, status: "active", tags: ["导览", "Smart Notes Demo"], body: `# ${title}\n\n${content}` }));
 }
 
 export function buildSmartNotesDemoFixture() {
   const permanent_notes = permanentDefinitions
-    .filter(([id]) => !["PERM-PRACTICE-UNLINKED-QUESTION", "PERM-PRACTICE-UNLINKED-BOUNDARY"].includes(id))
+    .filter(([id]) => CORE_PERMANENT_IDS.has(id))
     .map(permanentNote);
   const writingProjectMain = writingProject();
-  const writingProjectRelations = relationWritingProject();
   const final_essays = [
-    { id: "ESSAY-SMART-NOTES-DEMO", note_type: "final_essay", title: "示例文章：把已有笔记变成写作结构", writing_project_id: writingProjectMain.id, body: "# 示例文章：把已有笔记变成写作结构\n\n研思录先把已有材料加工成用户愿意承担的判断，再用 [[关系理由比连线本身更重要]] 说明这些判断如何互相支撑，最后通过 [[写作中心应该从已确认判断生成提纲]] 组织成可追溯提纲。AI 可以帮助提炼和检查，但判断、关系和保存仍由用户确认。" },
-    { id: "ESSAY-RELATION-TYPES-HELP", note_type: "final_essay", title: "帮助文章：关系类型以后怎么用于写作", writing_project_id: writingProjectRelations.id, body: "# 帮助文章：关系类型以后怎么用于写作\n\n支持可以成为证据，反驳可以成为反方，限定可以成为边界，桥接可以成为过渡。关键不在类型数量，而在一句可读的关系理由。" },
-    { id: "ESSAY-YANSILU-BEST-PRACTICE", note_type: "final_essay", title: "帮助文章：第一次使用研思录怎么走", writing_project_id: writingProjectMain.id, body: "# 帮助文章：第一次使用研思录怎么走\n\n从首页开始，只推进一个动作。处理一条材料，形成一条永久笔记，补一条关系，整理一个主题，再进入写作中心。" }
+    { id: "ESSAY-SMART-NOTES-DEMO", note_type: "final_essay", title: "示例文章：把已有笔记变成写作结构", writing_project_id: writingProjectMain.id, body: "# 示例文章：把已有笔记变成写作结构\n\n研思录先把已有材料加工成用户愿意承担的判断，再用 [[关系理由比连线本身更重要]] 说明这些判断如何互相支撑，最后通过 [[写作中心应该从已确认判断生成提纲]] 组织成可追溯提纲。" }
   ];
   const guide_notes = guideNotes();
   const guideLinkTargets = {
-    "GUIDE-TODAY-NEXT-STEP": "PERM-TODAY-REVIEW-REWARDS-PROCESSING",
+    "GUIDE-TODAY-NEXT-STEP": "PERM-FLEETING-NOTE-IS-CAPTURE",
     "GUIDE-INDEX-TO-WRITING": "PERM-WRITING-CENTER-FROM-CONFIRMED-NOTES",
-    "GUIDE-HELP-TASKS": "PERM-HELP-SHOULD-FOLLOW-TASKS",
-    "GUIDE-BACKUP-MOBILE-AI": "PERM-MOBILE-CAPTURE-DESKTOP-ORGANIZE",
-    "GUIDE-RELATION-TYPES": "PERM-RELATION-TYPE-IS-A-READING-INSTRUCTION",
-    "GUIDE-INDEX-PRACTICE": "PERM-INDEX-CARD-STARTS-WITH-CENTRAL-QUESTION",
-    "GUIDE-WRITING-FROM-RELATIONS": "PERM-WRITING-USES-RELATION-ROLES",
-    "GUIDE-DEMO-PRACTICE": "PERM-FIRST-TEN-MINUTES"
+    "GUIDE-RELATION-TYPES": "PERM-RELATION-REASON-MATTERS"
   };
   guide_notes.forEach((note) => {
     const targetId = guideLinkTargets[note.id];
     if (targetId) note.body += `\n\n继续：[[${targetId}|继续阅读]]`;
   });
-  const finalEssayLinkTargets = {
-    "ESSAY-SMART-NOTES-DEMO": "PERM-COMPOUND-INTEREST-FROM-REUSE",
-    "ESSAY-RELATION-TYPES-HELP": "PERM-RELATION-TYPE-IS-A-READING-INSTRUCTION",
-    "ESSAY-YANSILU-BEST-PRACTICE": "PERM-FIRST-TEN-MINUTES"
-  };
+  const finalEssayLinkTargets = { "ESSAY-SMART-NOTES-DEMO": "PERM-COMPOUND-INTEREST-FROM-REUSE" };
   final_essays.forEach((note) => {
     const targetId = finalEssayLinkTargets[note.id];
     if (targetId) note.body += `\n\n延伸：[[${targetId}|继续阅读]]`;
@@ -478,7 +504,7 @@ export function buildSmartNotesDemoFixture() {
   const fixture = {
     id: "demo-smart-notes-product-thinking-v3",
     title: "Smart Notes Demo：卡片笔记写作法 x 研思录",
-    purpose: "帮助第一次使用者通过一组可操作数据，理解记录、永久笔记、关联、主题、写作和 AI 辅助。",
+    purpose: "帮助第一次使用者用一条真实知识链，理解记录、永久笔记、关联、主题和写作怎样连续发生。",
     version: 3,
     sources: [{
       id: SOURCE_ID,
@@ -491,16 +517,16 @@ export function buildSmartNotesDemoFixture() {
       tags: ["卡片笔记", "Smart Notes Demo"],
       body: "# 《卡片笔记写作法》方法边界\n\n本 Demo 用自己的话整理方法，只用于演示研思录当前功能。"
     }],
-    fleeting_notes: fleetingDefinitions.map(fleetingNote),
-    literature_notes: literatureDefinitions.map(literatureNote),
+    fleeting_notes: fleetingDefinitions.filter(([id]) => CORE_FLEETING_IDS.has(id)).map(fleetingNote),
+    literature_notes: literatureDefinitions.filter(([id]) => CORE_LITERATURE_IDS.has(id)).map(literatureNote),
     permanent_notes,
-    index_cards: indexDefinitions.map(indexCard),
+    index_cards: indexDefinitions.filter(([id]) => CORE_INDEX_IDS.has(id)).map(indexCard),
     relations: buildRelations({
       permanentNotes: permanent_notes,
       notes: [...permanent_notes, ...guide_notes, ...final_essays]
     }),
-    writing_projects: [writingProjectMain, writingProjectRelations],
-    draft_scaffolds: [scaffold(writingProjectMain, "DRAFT-SMART-NOTES-DEMO"), scaffold(writingProjectRelations, "DRAFT-RELATION-TO-WRITING-PRACTICE")],
+    writing_projects: [writingProjectMain],
+    draft_scaffolds: [scaffold(writingProjectMain, "DRAFT-SMART-NOTES-DEMO")],
     final_essays,
     guide_notes
   };

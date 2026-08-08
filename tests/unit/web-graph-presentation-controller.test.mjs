@@ -107,10 +107,11 @@ test("graph presentation controller resets demo presentation through relation fi
   const reset = controller.resetGraphDemoPresentationState();
 
   assert.equal(reset, graphState);
-  assert.deepEqual(calls, [["meaningful", { persist: false }]]);
+  assert.deepEqual(calls, [["all", { persist: false }]]);
   assert.equal(graphState.selection, null);
   assert.equal(graphState.utilityDrawerOpen, false);
   assert.equal(graphState.utilityDrawerVisible, true);
+  assert.equal(graphState.zoom, "detail");
   assert.deepEqual(graphState.sectionOpen, {
     "bridge-gaps": false,
     "weak-relations": false,
@@ -132,9 +133,10 @@ test("graph presentation reset stays self-contained after demo module cleanup", 
   });
 
   assert.equal(result, graphState);
-  assert.deepEqual(calls, [["meaningful", { persist: false }]]);
+  assert.deepEqual(calls, [["all", { persist: false }]]);
   assert.equal(graphState.selection, null);
   assert.equal(graphState.readingLens, "insight");
+  assert.equal(graphState.zoom, "detail");
   assert.equal(graphState.utilityDrawerOpen, false);
   assert.equal(graphState.thinkingPanelVisible, true);
   assert.deepEqual(graphState.sectionOpen, {

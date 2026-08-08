@@ -51,7 +51,7 @@ test("beginner demo walkthrough keeps note title separate from the action button
   assert.match(html, /把记录说成自己的判断/);
   assert.match(html, /打开第 1 步笔记/);
   assert.doesNotMatch(html, /打开“写作不是最后一步”/);
-  assert.match(html, /data-sidebar-flow-note-id="PERM-WRITING-STARTS-BEFORE-DRAFT"/);
+  assert.match(html, /data-sidebar-flow-note-id="PERM-PARAPHRASE-BEFORE-JUDGMENT"/);
 });
 
 test("beginner demo walkthrough advances only after explicit completed actions", () => {
