@@ -47,6 +47,7 @@ export function createTodayOrganizingEntryRuntime(depsProvider = () => ({})) {
       createReviewOutline,
       markTodayReturnTarget,
       applyWritingTab,
+      openStartupUntitledNote,
       setStatus
     } = depsProvider() || {};
     return installTodayOrganizingEvents($("todayOrganizingPanel"), () => ({
@@ -60,6 +61,7 @@ export function createTodayOrganizingEntryRuntime(depsProvider = () => ({})) {
       createReviewOutline,
       markTodayReturnTarget,
       applyWritingTab,
+      openStartupUntitledNote,
       setStatus
     }));
   }

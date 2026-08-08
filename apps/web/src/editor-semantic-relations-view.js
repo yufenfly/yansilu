@@ -193,6 +193,24 @@ export class EditorSemanticRelationsView {
       .join("");
   }
 
+  renderCreateRelationTypeOptions(selectedType = "") {
+    const selected = String(selectedType || "supports").trim().toLowerCase() || "supports";
+    const common = [
+      ["supports", "支持它"],
+      ["contradicts", "不同意它"],
+      ["associated_with", "让我想到它"]
+    ];
+    const commonIds = new Set(common.map(([type]) => type));
+    const commonOptions = common.map(([type, label]) =>
+      `<option value="${escapeHtml(type)}"${type === selected ? " selected" : ""}>${escapeHtml(label)}</option>`
+    ).join("");
+    const moreOptions = RELATION_CREATE_TYPES
+      .filter((type) => !commonIds.has(type))
+      .map((type) => `<option value="${escapeHtml(type)}"${type === selected ? " selected" : ""}>${escapeHtml(relationTypeLabel(type))}</option>`)
+      .join("");
+    return `<optgroup label="常用">${commonOptions}</optgroup><optgroup label="更多关系">${moreOptions}</optgroup>`;
+  }
+
   renderCreateRelationFormSection(noteId, prefill = {}) {
     const host = this.host;
     const activeNote = host.activeNote();
@@ -204,9 +222,7 @@ export class EditorSemanticRelationsView {
     const targetQuery = String(prefill?.targetQuery || selectedTarget?.title || "").trim();
     const rationaleDraft = String(prefill?.rationaleDraft || "").trim();
     const insightQuestionDraft = String(prefill?.insightQuestionDraft || "").trim();
-    const typeOptions = RELATION_CREATE_TYPES.map(
-      (type) => `<option value="${escapeHtml(type)}"${type === selectedRelationType ? " selected" : ""}>${escapeHtml(relationTypeLabel(type))}</option>`
-    ).join("");
+    const typeOptions = this.renderCreateRelationTypeOptions(selectedRelationType);
     const targetChoices = this.renderRelationTargetChoices(candidates, selectedTargetId, targetQuery, selectedTargetId);
 
     return `
@@ -223,12 +239,12 @@ export class EditorSemanticRelationsView {
             <div class="link-picker-list semantic-relation-target-list" data-relation-target-list hidden>${targetChoices}</div>
           </label>
           <label>
-            <span>关系</span>
+            <span>它和这条笔记是什么关系？</span>
             <select name="relationType" required>${typeOptions}</select>
           </label>
           <label>
-            <span>理由</span>
-            <textarea name="rationale" required placeholder="为什么相关？">${escapeHtml(rationaleDraft)}</textarea>
+            <span>为什么这么想？</span>
+            <textarea name="rationale" required placeholder="例如：这条笔记补充了前一条判断在什么条件下成立。">${escapeHtml(rationaleDraft)}</textarea>
           </label>
           <input type="hidden" name="insightQuestion" value="${escapeHtml(insightQuestionDraft)}">
           <div class="semantic-relation-form-error" data-relation-form-error></div>

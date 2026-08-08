@@ -18,22 +18,22 @@ test("beginner flow detects Smart Notes demo and renders one focused next step",
     { id: "THEME-WHY-LINK-NOTES" },
     { id: "WRITE-SMART-NOTES-DEMO" }
   ];
-  const flow = buildSmartNotesDemoWalkthrough({ notes, selectedNoteId: "THEME-WHY-LINK-NOTES" });
+  const flow = buildSmartNotesDemoWalkthrough({ notes, selectedNoteId: "PERM-UNLINKED-PRACTICE" });
   const html = renderSmartNotesDemoWalkthrough(flow);
 
   assert.equal(isSmartNotesDemoScope(notes), true);
-  assert.equal(flow.steps.length, 5);
-  assert.equal(flow.activeStepKey, "theme-index");
+  assert.equal(flow.steps.length, 3);
+  assert.equal(flow.activeStepKey, "first-relation");
   assert.equal(flow.steps[0].done, true);
-  assert.equal(flow.steps[2].active, true);
+  assert.equal(flow.steps[1].active, true);
   assert.match(html, /data-smart-notes-demo-walkthrough/);
-  assert.match(html, /Smart Notes Demo 导览/);
+  assert.match(html, /从记录到写作/);
   assert.match(html, /sidebar-flow-current/);
-  assert.match(html, /第 3 \/ 5 步/);
-  assert.match(html, /读主题索引/);
-  assert.match(html, /打开第 3 步笔记/);
+  assert.match(html, /第 2 \/ 3 步/);
+  assert.match(html, /说明两条观点为什么有关/);
+  assert.match(html, /打开并关联/);
   assert.doesNotMatch(html, /打开“为什么要关联笔记？”/);
-  assert.doesNotMatch(html, /data-sidebar-flow-action="open-demo-note-relations"/);
+  assert.match(html, /data-sidebar-flow-action="open-demo-note-relations"/);
   assert.doesNotMatch(html, /打开写作中心/);
   assert.doesNotMatch(html, /\b(?:PN-SN|WP-SN|IC-SN)-/);
 });
@@ -47,7 +47,7 @@ test("beginner demo walkthrough keeps note title separate from the action button
   const html = renderSmartNotesDemoWalkthrough(flow);
 
   assert.equal(smartNotesDemoActionLabel(flow.steps[0], 0), "打开第 1 步笔记");
-  assert.match(html, /从记录到永久笔记/);
+  assert.match(html, /把记录说成自己的判断/);
   assert.match(html, /打开第 1 步笔记/);
   assert.doesNotMatch(html, /打开“写作不是最后一步”/);
   assert.match(html, /data-sidebar-flow-note-id="PERM-WRITING-STARTS-BEFORE-DRAFT"/);

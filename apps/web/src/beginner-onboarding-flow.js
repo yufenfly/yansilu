@@ -8,9 +8,9 @@ function noteIdSet(notes = []) {
 
 export const SMART_NOTES_DEMO_WALKTHROUGH_STEPS = [
   {
-    key: "source-to-permanent",
-    title: "从记录到永久笔记",
-    note: "先看一条材料怎样经过转述，变成用户自己的判断。",
+    key: "first-judgment",
+    title: "把记录说成自己的判断",
+    note: "先看一条材料怎样经过转述，变成可以长期复用的观点。",
     action: "open-demo-note",
     targetNoteId: "PERM-WRITING-STARTS-BEFORE-DRAFT",
     noteIds: [
@@ -22,37 +22,21 @@ export const SMART_NOTES_DEMO_WALKTHROUGH_STEPS = [
     ]
   },
   {
-    key: "connect-relation",
-    title: "补一条关系理由",
-    note: "查看正文链接和人工关系怎样共同进入关系网，再补一条你自己的理由。",
+    key: "first-relation",
+    title: "说明两条观点为什么有关",
+    note: "选择一条相关笔记，写一句它为什么支持、不同意或让你想到另一条。",
     action: "open-demo-note-relations",
     targetNoteId: "PERM-UNLINKED-PRACTICE",
     noteIds: ["PERM-UNLINKED-PRACTICE"]
   },
   {
-    key: "theme-index",
-    title: "读主题索引",
-    note: "看中心问题和关键笔记，而不是把索引当文件夹。",
-    action: "open-demo-note",
-    targetNoteId: "THEME-WHY-LINK-NOTES",
-    noteIds: ["THEME-WHY-LINK-NOTES", "THEME-WHAT-IS-PERMANENT-NOTE", "THEME-INDEX-TO-WRITING"]
-  },
-  {
-    key: "writing-outline",
-    title: "进入写作中心",
-    note: "从主题索引和已确认永久笔记生成文章提纲。",
+    key: "write-from-notes",
+    title: "看看观点怎样进入写作",
+    note: "从一个问题和已有观点开始组织文章，不必从空白页硬写。",
     action: "open-demo-writing",
     targetNoteId: "WRITE-SMART-NOTES-DEMO",
     noteIds: ["WRITE-SMART-NOTES-DEMO", "DRAFT-SMART-NOTES-DEMO"]
   },
-  {
-    key: "review-next",
-    title: "打开首页",
-    note: "只找下一步动作，不做大扫除。",
-    action: "open-demo-review",
-    targetNoteId: "GUIDE-TODAY-NEXT-STEP",
-    noteIds: ["GUIDE-TODAY-NEXT-STEP", "FN-PHONE-CAPTURE-UNPROCESSED", "LN-AI-KEEPS-CANDIDATE-STATE"]
-  }
 ];
 
 export function isSmartNotesDemoScope(notes = []) {
@@ -80,8 +64,8 @@ export function buildSmartNotesDemoWalkthrough({ notes = [], selectedNoteId = ""
   const active = steps[activeIndex] || steps[0] || null;
   return {
     kind: "smart-notes-demo",
-    title: "Smart Notes Demo 导览",
-    note: active ? `下一步：${active.title}。${active.note}` : "按五步看完从材料到文章提纲的主路径。",
+    title: "从记录到写作",
+    note: active ? `下一步：${active.title}。${active.note}` : "按三步看完从记录到文章的主路径。",
     activeStepKey: active?.key || "",
     steps
   };
@@ -114,12 +98,12 @@ export function renderSmartNotesDemoWalkthrough(flow = {}, deps = {}) {
   return `
     <div class="sidebar-flow-card" data-smart-notes-demo-walkthrough>
       <div>
-        <div class="sidebar-flow-kicker">Demo Walkthrough</div>
-        <div class="sidebar-flow-title">${escapeHtml(flow.title || "Smart Notes Demo 导览")}</div>
+        <div class="sidebar-flow-kicker">3 分钟示例</div>
+        <div class="sidebar-flow-title">${escapeHtml(flow.title || "从记录到写作")}</div>
         <div class="sidebar-flow-note">${escapeHtml(flow.note || "下一步只做一个动作。")}</div>
       </div>
       <div class="sidebar-flow-current" aria-label="Smart Notes demo 当前步骤">
-        <span>第 ${escapeHtml(activeIndex + 1)} / ${escapeHtml(steps.length || 5)} 步</span>
+        <span>第 ${escapeHtml(activeIndex + 1)} / ${escapeHtml(steps.length || 3)} 步</span>
         <strong>${escapeHtml(active.title || "继续 Demo 导览")}</strong>
       </div>
       <button
@@ -144,12 +128,12 @@ export function renderSmartNotesDemoGuidePanel(flow = {}, deps = {}) {
   return `
     <section class="demo-guide-panel-card" data-smart-notes-demo-guide>
       <div class="demo-guide-copy">
-        <span>Demo 导览</span>
-        <strong>${escapeHtml(flow.title || "Smart Notes Demo 导览")}</strong>
+        <span>3 分钟示例</span>
+        <strong>${escapeHtml(flow.title || "从记录到写作")}</strong>
         <p>${escapeHtml(flow.note || "下一步只做一个动作。")}</p>
       </div>
       <div class="demo-guide-current">
-        <span>第 ${escapeHtml(activeIndex + 1)} / ${escapeHtml(steps.length || 5)} 步</span>
+        <span>第 ${escapeHtml(activeIndex + 1)} / ${escapeHtml(steps.length || 3)} 步</span>
         <strong>${escapeHtml(active.title || "继续 Demo 导览")}</strong>
       </div>
       <button

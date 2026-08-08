@@ -195,24 +195,24 @@ test("today organizing panel uses readable action words", () => {
 
   assert.match(html, /手机随笔待处理/);
   assert.doesNotMatch(html, /从这里开始整理知识/);
-  assert.match(html, /待处理材料/);
+  assert.match(html, /待说清/);
   assert.match(html, /手机随笔待处理/);
-  assert.match(html, /补一条关系/);
-  assert.match(html, /整理主题/);
-  assert.match(html, /进入写作/);
-  assert.match(html, /确认这组笔记能否写成文章/);
-  assert.match(html, /生成提纲，再决定是否起草/);
+  assert.match(html, /说明为什么有关/);
+  assert.match(html, /围绕问题整理/);
+  assert.match(html, /用笔记开始写作/);
+  assert.match(html, /看看这些笔记能不能一起回答一个问题/);
+  assert.match(html, /先生成提纲，再决定是否起草/);
   assert.match(html, /推荐路径/);
-  assert.match(html, /材料 -> 关系 -> 主题 -> 写作/);
-  assert.match(html, /建立关系/);
+  assert.match(html, /记录 -> 判断 -> 关联 -> 写作/);
+  assert.match(html, /说明关联/);
   assert.match(html, /开始写作/);
   assert.match(html, /先完成上方推荐任务/);
-  assert.match(html, /处理这条材料/);
+  assert.match(html, /说清这条记录/);
   assert.match(html, /data-today-action="review-material"/);
   assert.doesNotMatch(html, /data-today-action="review-material" disabled/);
   assert.match(html, /去关联/);
-  assert.match(html, /打开主题索引/);
-  assert.match(html, /进入写作/);
+  assert.match(html, /打开这组笔记/);
+  assert.match(html, /用笔记开始写作/);
   assert.ok(html.indexOf('data-today-action="review-material"') < html.indexOf('data-today-secondary-tab="path"'));
   assert.ok(html.indexOf('data-today-action="review-material"') < html.indexOf('data-today-secondary-tab="check"'));
   assert.match(html, /today-path-inline/);
@@ -300,17 +300,19 @@ test("today organizing secondary tabs switch one full-width panel", async () => 
   assert.equal(tabs[1].span.textContent, "展开");
 });
 
-test("today organizing empty home makes demo import the primary first action", () => {
+test("today organizing empty home makes writing a first record the primary action", () => {
   const html = renderTodayOrganizingPanel({ isEmptyLibrary: true });
 
   assert.match(html, /第一次打开/);
-  assert.ok(html.includes("导入 Demo"));
-  assert.match(html, /先体验示例库/);
-  assert.match(html, /导入后会提示结果，并刷新首页/);
+  assert.match(html, /先写下一条你想留下的记录/);
+  assert.match(html, /写下第一条记录/);
+  assert.match(html, /导入已有 Markdown 笔记/);
+  assert.match(html, /体验 3 分钟示例/);
+  assert.match(html, /先完成一条自己的判断/);
   assert.match(html, /data-today-demo-status/);
   assert.match(html, /data-today-demo-progress/);
   assert.match(html, /role="progressbar"/);
-  assert.ok(html.indexOf("导入 Demo") < html.indexOf("<article><strong>记录"));
+  assert.ok(html.indexOf("写下第一条记录") < html.indexOf("体验 3 分钟示例"));
   assert.doesNotMatch(html, /当前笔记库状态/);
   assert.doesNotMatch(html, /今日提醒/);
   assert.doesNotMatch(html, /导入后自动打开导览笔记/);
@@ -320,10 +322,10 @@ test("today organizing empty home shows startup preparation before demo import i
   const html = renderTodayOrganizingPanel({ isEmptyLibrary: true, startupPending: true });
 
   assert.match(html, /正在准备\.\.\./);
-  assert.match(html, /正在启动本地服务，准备好后就能导入 Demo。/);
-  assert.match(html, /data-today-action="seed-demo" disabled aria-busy="true"/);
+  assert.match(html, /正在启动本地服务，准备好后就能开始。/);
+  assert.match(html, /data-today-action="start-first-note" disabled aria-busy="true"/);
   assert.match(html, /data-today-demo-progress/);
-  assert.doesNotMatch(html, /data-today-demo-progress[^>]+hidden/);
+  assert.match(html, /data-today-demo-progress[^>]+hidden/);
 });
 
 test("today organizing demo import shows immediate busy feedback", async () => {
@@ -725,6 +727,36 @@ test("today organizing events route main actions to existing workflows", async (
   assert.ok(calls.some((call) => call[0] === "state" && call[1] === "graph-associate-note" && call[2]?.noteId === "pn_1"));
   assert.ok(calls.some((call) => call[0] === "module" && call[1] === "writing"));
   assert.ok(calls.some((call) => call[0] === "theme" && call[1] === "idx_1"));
+});
+
+test("today organizing first-run actions create a record or open import", async () => {
+  const handlers = new Map();
+  const calls = [];
+  installTodayOrganizingEvents({ addEventListener: (eventName, handler) => handlers.set(eventName, handler) }, () => ({
+    openStartupUntitledNote: async () => calls.push(["start-note"]),
+    activateModule: (moduleName) => calls.push(["module", moduleName]),
+    handleStateChange: async (reason, payload) => calls.push(["state", reason, payload])
+  }));
+  const click = async (action) => {
+    const button = {
+      disabled: false,
+      attributes: { "data-today-action": action },
+      getAttribute(name) { return this.attributes[name] || ""; },
+      setAttribute(name, value) { this.attributes[name] = value; },
+      removeAttribute(name) { delete this.attributes[name]; }
+    };
+    await handlers.get("click")({
+      preventDefault() {},
+      target: { closest: (selector) => selector === "[data-today-action]" ? button : null }
+    });
+  };
+
+  await click("start-first-note");
+  await click("open-import");
+
+  assert.deepEqual(calls[0], ["start-note"]);
+  assert.deepEqual(calls[1], ["module", "explorer"]);
+  assert.deepEqual(calls[2], ["state", "open-import", { source: "today-empty-start" }]);
 });
 
 test("today organizing writing action adds the ready note only when no theme is available", async () => {

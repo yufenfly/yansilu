@@ -197,6 +197,12 @@ test("create relation form uses a searchable target field instead of a select bo
   assert.match(html, /\u76ee\u6807\u7b14\u8bb0/);
   assert.match(html, /placeholder="\u641c\u7d22\u7b14\u8bb0"/);
   assert.match(html, /\u4fdd\u5b58\u5916\u90e8\u5173\u8054/);
+  assert.match(html, /\u5b83\u548c\u8fd9\u6761\u7b14\u8bb0\u662f\u4ec0\u4e48\u5173\u7cfb？/);
+  assert.match(html, /\u652f\u6301\u5b83/);
+  assert.match(html, /\u4e0d\u540c\u610f\u5b83/);
+  assert.match(html, /\u8ba9\u6211\u60f3\u5230\u5b83/);
+  assert.match(html, /<optgroup label="\u66f4\u591a\u5173\u7cfb">/);
+  assert.match(html, /\u4e3a\u4ec0\u4e48\u8fd9\u4e48\u60f3？/);
   assert.doesNotMatch(html, /data-relation-target-status/);
   assert.doesNotMatch(html, /\u5df2\u9009\uff1a/);
   assert.doesNotMatch(html, /新建关联|确认建立/);
