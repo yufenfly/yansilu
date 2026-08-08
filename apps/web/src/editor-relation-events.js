@@ -106,6 +106,16 @@ export function routeEditorRelationClick(host, event) {
     return true;
   }
 
+  const permanentRelationTypeChoice = target.closest("[data-permanent-relation-type-choice]");
+  if (permanentRelationTypeChoice) {
+    host.updatePermanentRelationWorkspaceField(
+      "relationType",
+      permanentRelationTypeChoice.getAttribute("data-permanent-relation-type-choice") || "associated_with"
+    );
+    host.syncPermanentRelationWorkspaceOverlay();
+    return true;
+  }
+
   const editorRelatedPopoverClose = target.closest("[data-editor-related-popover-close]");
   if (editorRelatedPopoverClose) {
     const popover = editorRelatedPopoverClose.closest("[data-editor-related-popover]");

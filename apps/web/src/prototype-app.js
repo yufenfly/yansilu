@@ -40,6 +40,7 @@ import { createModuleWorkspaceHeaderRuntimeRoutes } from "./app-module-header-ru
 import { createSidebarTitleController } from "./app-shell-sidebar-controller.js";
 import { createSidebarTitlePrototypeDepsProvider } from "./app-shell-sidebar-host-deps.js";
 import { installSidebarFlowEventHandler } from "./app-shell-sidebar-flow.js";
+import { buildSmartNotesDemoWalkthrough, renderSmartNotesDemoGuidePanel } from "./beginner-onboarding-flow.js";
 import { installMobileNoteEventBindings } from "./mobile-note-event-bindings.js";
 import { createAppShellStateChangePrototypeDepsProvider } from "./app-shell-state-change-host-deps.js";
 import { handleCreateDirectoryFromDialog } from "./app-shell-state-file-actions.js";
@@ -3184,9 +3185,18 @@ function renderExplorerSidebarFlow(rootId = state.browserRootId) {
 function renderSmartNotesDemoGuide() {
   const element = $("demoGuidePanel");
   if (!element) return null;
-  element.classList.add("hidden");
-  element.innerHTML = "";
-  return null;
+  const flow = buildSmartNotesDemoWalkthrough({
+    notes: state.notes,
+    completedSteps: state.smartNotesDemoCompletedSteps
+  });
+  if (!flow) {
+    element.classList.add("hidden");
+    element.innerHTML = "";
+    return null;
+  }
+  element.innerHTML = renderSmartNotesDemoGuidePanel(flow, { escapeHtml });
+  element.classList.remove("hidden");
+  return flow;
 }
 
 function syncNewNoteButtons() {
@@ -6499,6 +6509,7 @@ installSidebarFlowEventHandler({
     continueWritingProjectEntry,
     handleStateChange,
     openNoteById,
+    renderAll,
     setStatus,
     dismissSafeOverlaysForNavigation: () => dismissSafeOverlaysForNavigation({
       graphState,

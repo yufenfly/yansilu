@@ -14266,6 +14266,66 @@
       font-weight: 850;
       line-height: 1.35;
     }
+    .permanent-relation-type-choice {
+      display: grid;
+      gap: 8px;
+    }
+    .permanent-relation-type-choice > span,
+    .permanent-relation-more-types label span {
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+    .permanent-relation-type-choice-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .permanent-relation-type-card {
+      min-height: 94px;
+      display: grid;
+      align-content: start;
+      gap: 6px;
+      border: 1px solid #d9e5ec;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #10202a;
+      cursor: pointer;
+      font: inherit;
+      padding: 12px;
+      text-align: left;
+    }
+    .permanent-relation-type-card strong {
+      font-size: 14px;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+    .permanent-relation-type-card small {
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 650;
+      line-height: 1.45;
+    }
+    .permanent-relation-type-card:hover,
+    .permanent-relation-type-card.is-active {
+      border-color: rgba(14, 116, 144, 0.52);
+      background: #ecfeff;
+      color: #0f5f68;
+    }
+    .permanent-relation-more-types {
+      color: #52657d;
+      font-size: 12px;
+      font-weight: 750;
+    }
+    .permanent-relation-more-types summary {
+      cursor: pointer;
+    }
+    .permanent-relation-more-types label {
+      display: grid;
+      gap: 6px;
+      margin-top: 10px;
+    }
     .permanent-relation-source strong,
     .permanent-relation-preview strong {
       color: #10202a;
@@ -22427,6 +22487,7 @@
     @media (max-width: 920px) {
       .permanent-relation-overlay {
         left: 0;
+        z-index: 3000;
       }
       .demo-guide-panel-card {
         grid-template-columns: 1fr;
@@ -22439,6 +22500,12 @@
 
       .demo-guide-action {
         width: 100%;
+      }
+      .permanent-relation-type-choice-grid {
+        grid-template-columns: 1fr;
+      }
+      .permanent-relation-type-card {
+        min-height: 0;
       }
       .sidebar-flow-card[data-smart-notes-demo-walkthrough] {
         order: -20;

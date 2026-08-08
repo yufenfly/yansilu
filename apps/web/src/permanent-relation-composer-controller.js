@@ -1,5 +1,6 @@
 import { searchNotes, fetchNoteRelations, createNoteRelation, updateNoteRelation } from "./prototype-api.js";
 import { relationFollowupSuggestionForDraft, relationTypeLabel } from "./editor-relation-helpers.js";
+import { completeSmartNotesDemoStep } from "./beginner-onboarding-flow.js";
 import { wikilinkTokenForNote } from "./editor-link-picker.js";
 import { saveRelationTransaction } from "./relation-save-transaction.js";
 import {
@@ -29,6 +30,14 @@ function stateSessionId(host) {
 function noteTitle(host, noteId = "") {
   const cleanNoteId = cleanText(noteId);
   return host.state?.notes?.find?.((note) => note?.id === cleanNoteId)?.title || cleanNoteId;
+}
+
+export function completePendingSmartNotesDemoRelation(appState = {}, sourceNoteId = "") {
+  const pending = appState?.smartNotesDemoPendingRelationStep;
+  if (!pending?.key || cleanText(pending.noteId) !== cleanText(sourceNoteId)) return false;
+  appState.smartNotesDemoCompletedSteps = completeSmartNotesDemoStep(appState.smartNotesDemoCompletedSteps, pending.key);
+  appState.smartNotesDemoPendingRelationStep = null;
+  return true;
 }
 
 export class PermanentRelationComposerController {
@@ -276,6 +285,7 @@ export class PermanentRelationComposerController {
       }
       const linkInserted = await this.insertLinkIfRequested(state);
       if (!draftStillCurrent()) return;
+      completePendingSmartNotesDemoRelation(host.state, sourceNote.id);
       host.renderAll?.();
       if (state.entryRoute?.returnTo === "graph") {
         await host.refreshDirectoryGraph?.();

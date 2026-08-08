@@ -61,9 +61,13 @@ test("permanent relation workspace renders a large relation-only flow", () => {
   assert.match(html, />关联</);
   assert.match(html, /目标笔记/);
   assert.match(html, /已选择/);
-  assert.match(html, />关系</);
-  assert.match(html, />理由</);
-  assert.match(html, /placeholder="为什么相关？"/);
+  assert.match(html, /它和这条笔记是什么关系？/);
+  assert.match(html, /支持它/);
+  assert.match(html, /不同意它/);
+  assert.match(html, /让我想到它/);
+  assert.match(html, /更多关系/);
+  assert.match(html, /为什么这么想？/);
+  assert.match(html, /placeholder="例如：这条笔记补充了前一条判断在什么条件下成立。"/);
   assert.match(html, />关联</);
   assert.doesNotMatch(html, /role="tablist"/);
   assert.doesNotMatch(html, /data-permanent-relation-target-preview-slot/);
@@ -171,7 +175,7 @@ test("permanent relation workspace keeps saved-relation counts out of the focuse
   });
 
   assert.match(html, /目标笔记/);
-  assert.match(html, />理由</);
+  assert.match(html, /为什么这么想？/);
   assert.doesNotMatch(html, /permanent-relation-source-status/);
   assert.doesNotMatch(html, />1 条已保存关系</);
   assert.doesNotMatch(html, />3 条已保存关系</);

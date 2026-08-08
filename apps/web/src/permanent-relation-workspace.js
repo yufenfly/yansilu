@@ -30,11 +30,58 @@ function noteMeta(note = {}, deps = {}) {
 
 const PERMANENT_RELATION_WORKSPACE_TYPES = RELATION_CREATE_TYPES.filter((type) => type !== "appears_in_draft");
 
+const COMMON_RELATION_CHOICES = [
+  {
+    type: "supports",
+    title: "支持它",
+    note: "这条笔记给前一条判断增加证据或理由。"
+  },
+  {
+    type: "contradicts",
+    title: "不同意它",
+    note: "这条笔记提出反例、冲突或不同判断。"
+  },
+  {
+    type: "associated_with",
+    title: "让我想到它",
+    note: "它们有关，但你暂时不需要给关系下更细的定义。"
+  }
+];
+
 function relationWorkspaceTypeOptions(selected = "associated_with") {
   const active = cleanText(selected).toLowerCase() || "associated_with";
   return PERMANENT_RELATION_WORKSPACE_TYPES.map(
     (type) => `<option value="${escapeHtml(type)}"${type === active ? " selected" : ""}>${escapeHtml(relationTypeLabel(type))}</option>`
   ).join("");
+}
+
+function renderCommonRelationChoices(selected = "associated_with") {
+  const active = cleanText(selected).toLowerCase() || "associated_with";
+  return `
+    <section class="permanent-relation-type-choice" aria-label="选择关系">
+      <span>它和这条笔记是什么关系？</span>
+      <div class="permanent-relation-type-choice-grid">
+        ${COMMON_RELATION_CHOICES.map((choice) => `
+          <button
+            class="permanent-relation-type-card${choice.type === active ? " is-active" : ""}"
+            type="button"
+            data-permanent-relation-type-choice="${escapeHtml(choice.type)}"
+            aria-pressed="${choice.type === active ? "true" : "false"}"
+          >
+            <strong>${escapeHtml(choice.title)}</strong>
+            <small>${escapeHtml(choice.note)}</small>
+          </button>
+        `).join("")}
+      </div>
+      <details class="permanent-relation-more-types">
+        <summary>更多关系</summary>
+        <label>
+          <span>需要更具体时再选</span>
+          <select name="relationType" data-permanent-relation-field="relationType" required>${relationWorkspaceTypeOptions(active)}</select>
+        </label>
+      </details>
+    </section>
+  `;
 }
 
 function renderSelectedTargetSummary(target = null, deps = {}) {
@@ -237,13 +284,10 @@ export function renderPermanentRelationWorkspace({
                 </section>`
           }
           <form class="permanent-relation-confirm ${isEditingExisting ? "is-editing-existing" : ""}" data-permanent-relation-form ${showingAiTargets ? "hidden" : ""}>
+            ${renderCommonRelationChoices(relationTypeValue)}
             <label>
-              <span>关系</span>
-              <select name="relationType" data-permanent-relation-field="relationType" required>${relationWorkspaceTypeOptions(relationTypeValue)}</select>
-            </label>
-            <label>
-              <span>理由</span>
-              <textarea name="rationale" data-permanent-relation-field="rationale" required placeholder="为什么相关？">${escapeHtml(rationaleValue)}</textarea>
+              <span>为什么这么想？</span>
+              <textarea name="rationale" data-permanent-relation-field="rationale" required placeholder="例如：这条笔记补充了前一条判断在什么条件下成立。">${escapeHtml(rationaleValue)}</textarea>
             </label>
             <input type="hidden" name="insightQuestion" data-permanent-relation-field="insightQuestion" value="${escapeHtml(workspaceState.insightQuestion)}">
             ${workspaceState.error ? `<div class="semantic-relation-form-error">${escapeHtml(workspaceState.error)}</div>` : ""}

@@ -1,5 +1,6 @@
 import {
   buildSmartNotesDemoWalkthrough,
+  completeSmartNotesDemoStep,
   renderSmartNotesDemoWalkthrough
 } from "./beginner-onboarding-flow.js";
 
@@ -44,7 +45,7 @@ export function distillationSummaryForSidebarFlow(notes = [], deps = {}) {
   );
 }
 
-export function buildExplorerSidebarFlowState({ rootId = "", currentNotes = [], originalNotes = [], allNotes = [], selectedNoteId = "" } = {}, deps = {}) {
+export function buildExplorerSidebarFlowState({ rootId = "", currentNotes = [], originalNotes = [], allNotes = [], selectedNoteId = "", demoCompletedSteps = [] } = {}, deps = {}) {
   const {
     noteHasGeneratedOriginal = () => false,
     isPermanentLikeNote = () => false
@@ -55,7 +56,8 @@ export function buildExplorerSidebarFlowState({ rootId = "", currentNotes = [], 
       ...(Array.isArray(currentNotes) ? currentNotes : []),
       ...(Array.isArray(originalNotes) ? originalNotes : [])
     ],
-    selectedNoteId
+    selectedNoteId,
+    completedSteps: demoCompletedSteps
   });
   if (demoWalkthrough) return demoWalkthrough;
   const isOriginal = rootId === "dir_original_default";
@@ -190,6 +192,7 @@ export async function handleSidebarFlowAction(event, deps = {}) {
     state = {},
     handleStateChange = async () => {},
     openNoteById = () => false,
+    renderAll = () => {},
     setStatus = () => {},
     dismissSafeOverlaysForNavigation = () => ({ ok: true })
   } = deps;
@@ -224,9 +227,16 @@ export async function handleSidebarFlowAction(event, deps = {}) {
       return false;
     }
     if (action === "open-demo-note-relations") {
+      state.smartNotesDemoPendingRelationStep = {
+        key: String(button.dataset?.sidebarFlowStepKey || "first-relation").trim() || "first-relation",
+        noteId
+      };
       await handleStateChange("open-note-relations", { noteId, source: "smart-notes-demo-walkthrough" });
       setStatus("已打开导览笔记，可以开始补关系理由。", "ok");
     } else {
+      const stepKey = String(button.dataset?.sidebarFlowStepKey || "").trim();
+      if (stepKey) state.smartNotesDemoCompletedSteps = completeSmartNotesDemoStep(state.smartNotesDemoCompletedSteps, stepKey);
+      renderAll();
       setStatus("已打开导览笔记。", "ok");
     }
     return true;
@@ -243,6 +253,9 @@ export async function handleSidebarFlowAction(event, deps = {}) {
         statusMessage: "已打开 Smart Notes Demo 的可追溯文章提纲。"
       });
       if (!project) throw new Error("示例写作项目不可用");
+      const stepKey = String(button.dataset?.sidebarFlowStepKey || "").trim();
+      if (stepKey) state.smartNotesDemoCompletedSteps = completeSmartNotesDemoStep(state.smartNotesDemoCompletedSteps, stepKey);
+      renderAll();
       return true;
     } catch (error) {
       setStatus(`打开示例文章提纲失败：${String(error?.message || error)}`, "warn");
