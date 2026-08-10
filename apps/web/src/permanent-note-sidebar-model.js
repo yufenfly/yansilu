@@ -1,15 +1,12 @@
-import {
-  isHiddenRelation,
-  isMarkdownWikilinkRelation
-} from "./editor-relation-helpers.js";
+import { isHiddenRelation } from "./editor-relation-helpers.js";
 
 function relationList(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
 }
 
 export function explicitPermanentNoteRelations(relations = null) {
-  const outgoing = relationList(relations?.outgoingLinks).filter((link) => !isHiddenRelation(link) && !isMarkdownWikilinkRelation(link));
-  const backlinks = relationList(relations?.backlinks).filter((link) => !isHiddenRelation(link) && !isMarkdownWikilinkRelation(link));
+  const outgoing = relationList(relations?.outgoingLinks).filter((link) => !isHiddenRelation(link));
+  const backlinks = relationList(relations?.backlinks).filter((link) => !isHiddenRelation(link));
   return {
     outgoing,
     backlinks,

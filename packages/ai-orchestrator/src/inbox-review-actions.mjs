@@ -28,6 +28,9 @@ export function noteRestoreInputFromSnapshot(note = {}) {
     status: note.status || "draft",
     thesis: note.thesis ?? "",
     threeLineSummary: Array.isArray(note.threeLineSummary) ? [...note.threeLineSummary] : [],
+    startingQuestion: note.startingQuestion ?? "",
+    viewpointHistory: Array.isArray(note.viewpointHistory) ? note.viewpointHistory.map((item) => ({ ...item })) : [],
+    pendingViewpointRevision: note.pendingViewpointRevision ? { ...note.pendingViewpointRevision } : null,
     distillationStatus: note.distillationStatus ?? "missing",
     authorship: note.authorship ? { ...note.authorship } : { user_confirmed: false, ai_assisted: false },
     boundaryOrCounterpoint: note.boundaryOrCounterpoint ?? ""

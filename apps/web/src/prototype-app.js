@@ -5980,6 +5980,7 @@ const editor = new EditorPane(createEditorPaneHostDeps({
   selectPermanentDirectory,
   currentLiteratureTemplateSectionLabels,
   literatureTemplateSectionLabelCandidates,
+  currentVaultPath,
   renderStatusMeta,
   renderWorkspaceStatusHint,
   refreshDirectoryGraph,

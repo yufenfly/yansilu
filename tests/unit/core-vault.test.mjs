@@ -1446,20 +1446,28 @@ test("confirmPermanentNoteDistillation writes the distilled viewpoint into the v
 
   await updatePermanentNoteDistillation(vaultPath, "pn_distillation_body", {
     thesis: "Confirmed viewpoint should be visible in the note.",
+    startingQuestion: "How should a saved viewpoint remain traceable?",
     threeLineSummary: ["It clarifies the claim.", "It keeps the original body.", "It supports later writing."],
     boundaryOrCounterpoint: "It should not replace the user's original prose."
   });
   const confirmed = await confirmPermanentNoteDistillation(vaultPath, "pn_distillation_body");
 
   assert.match(confirmed.body, /^# Distillation body note\n\n## 提炼观点/);
-  assert.match(confirmed.body, /### 核心判断\n\nConfirmed viewpoint should be visible in the note\./);
+  assert.match(confirmed.body, /### 当前观点\n\nConfirmed viewpoint should be visible in the note\./);
   assert.match(confirmed.body, /1\. It clarifies the claim\.\n2\. It keeps the original body\.\n3\. It supports later writing\./);
   assert.match(confirmed.body, /### 边界\n\nIt should not replace the user's original prose\./);
   assert.match(confirmed.body, /Original body stays below the distilled viewpoint\./);
   assert.equal((confirmed.body.match(/## 提炼观点/g) || []).length, 1);
 
+  await assert.rejects(
+    updatePermanentNoteDistillation(vaultPath, "pn_distillation_body", {
+      thesis: "Updated viewpoint replaces the old visible block."
+    }),
+    (error) => error?.code === "VIEWPOINT_CHANGE_REASON_REQUIRED"
+  );
   await updatePermanentNoteDistillation(vaultPath, "pn_distillation_body", {
     thesis: "Updated viewpoint replaces the old visible block.",
+    thesisChangeReason: "A counterexample changed the scope of the claim.",
     threeLineSummary: ["Updated one.", "Updated two.", "Updated three."],
     boundaryOrCounterpoint: ""
   });
@@ -1468,6 +1476,95 @@ test("confirmPermanentNoteDistillation writes the distilled viewpoint into the v
   assert.match(reconfirmed.body, /Updated viewpoint replaces the old visible block\./);
   assert.doesNotMatch(reconfirmed.body, /Confirmed viewpoint should be visible in the note\./);
   assert.equal((reconfirmed.body.match(/## 提炼观点/g) || []).length, 1);
+  assert.equal(reconfirmed.startingQuestion, "How should a saved viewpoint remain traceable?");
+  assert.equal(reconfirmed.viewpointHistory.length, 1);
+  assert.equal(reconfirmed.viewpointHistory[0].previousThesis, "Confirmed viewpoint should be visible in the note.");
+  assert.equal(reconfirmed.viewpointHistory[0].reason, "A counterexample changed the scope of the claim.");
+});
+
+test("permanent note can confirm a current viewpoint without a three-line summary", async () => {
+  const vaultPath = await makeTempVault();
+  await initVault(vaultPath);
+  const created = await createNoteInDirectory(vaultPath, {
+    directoryId: "dir_original_default",
+    id: "pn_viewpoint_only",
+    title: "Viewpoint only",
+    body: "# Viewpoint only\n\nOriginal note body.",
+    originalityStatus: "pass",
+    authorship: { user_confirmed: false, ai_assisted: false }
+  });
+  assert.equal(created.id, "pn_viewpoint_only");
+
+  await updatePermanentNoteDistillation(vaultPath, created.id, {
+    thesis: "A clear current viewpoint is enough to complete the first step.",
+    startingQuestion: "What is the smallest useful first step?"
+  });
+  const confirmed = await confirmPermanentNoteDistillation(vaultPath, created.id);
+
+  assert.equal(confirmed.distillationStatus, "confirmed");
+  assert.deepEqual(confirmed.threeLineSummary, []);
+  assert.match(confirmed.body, /### 当前观点/);
+  assert.doesNotMatch(confirmed.body, /### 补充说明/);
+});
+
+test("AI viewpoint draft becomes history only after the user confirms the change", async () => {
+  const vaultPath = await makeTempVault();
+  await initVault(vaultPath);
+  const created = await createNoteInDirectory(vaultPath, {
+    directoryId: "dir_original_default",
+    id: "pn_pending_viewpoint",
+    title: "Pending viewpoint",
+    body: "# Pending viewpoint\n\nOriginal body.",
+    thesis: "Confirmed viewpoint"
+  });
+
+  const drafted = await updatePermanentNoteDistillation(vaultPath, created.id, {
+    thesis: "AI draft viewpoint",
+    thesisChangeReason: "Adopted as an AI draft.",
+    viewpointChangeSourceNoteIds: ["source-1"],
+    viewpointChangeStatus: "draft"
+  });
+  assert.deepEqual(drafted.viewpointHistory, []);
+  assert.equal(drafted.pendingViewpointRevision.previousThesis, "Confirmed viewpoint");
+
+  const committed = await updatePermanentNoteDistillation(vaultPath, created.id, {
+    thesis: "AI draft viewpoint",
+    thesisChangeReason: "The source provides a stronger counterexample.",
+    viewpointChangeSourceNoteIds: ["source-1"],
+    commitViewpointChange: true
+  });
+  assert.equal(committed.pendingViewpointRevision, null);
+  assert.equal(committed.viewpointHistory.length, 1);
+  assert.equal(committed.viewpointHistory[0].reason, "The source provides a stronger counterexample.");
+  assert.deepEqual(committed.viewpointHistory[0].sourceNoteIds, ["source-1"]);
+});
+
+test("body wikilinks count as relations only while both notes are active", async () => {
+  const vaultPath = await makeTempVault();
+  await initVault(vaultPath);
+  const target = await createNoteInDirectory(vaultPath, {
+    directoryId: "dir_original_default",
+    id: "pn_relation_target",
+    title: "Relation target",
+    body: "# Relation target\n\nTarget body.",
+    thesis: "The target has a current viewpoint.",
+    distillationStatus: "confirmed",
+    authorship: { user_confirmed: true, ai_assisted: false }
+  });
+  const source = await createNoteInDirectory(vaultPath, {
+    directoryId: "dir_original_default",
+    id: "pn_relation_source",
+    title: "Relation source",
+    body: "# Relation source\n\nThis note links to [[Relation target]].",
+    thesis: "A body link is a real relation.",
+    distillationStatus: "confirmed",
+    authorship: { user_confirmed: true, ai_assisted: false }
+  });
+
+  assert.equal((await getNoteById(vaultPath, source.id)).thinkingStatus.status, "ready_for_index");
+
+  await deleteNoteById(vaultPath, target.id);
+  assert.equal((await getNoteById(vaultPath, source.id)).thinkingStatus.status, "needs_relation");
 });
 
 test("title is derived from first markdown line when title field is absent", async () => {

@@ -47,7 +47,7 @@ test("permanent note workspace architecture chooses one active information area"
 
   assert.equal(
     permanentNoteWorkspaceArchitecture({
-      note: { thesis: "Claim", threeLineSummary: ["one", "two", "three"], distillationStatus: "confirmed" },
+      note: { thesis: "Claim", threeLineSummary: [], distillationStatus: "confirmed" },
       relationState: "loaded",
       explicitRelationCount: 0
     }).activeTab,
@@ -73,7 +73,7 @@ test("permanent note relation state separates weak signals from saved relations"
 
 test("permanent note status summary and relation assist expose UI-ready state only", () => {
   const summary = permanentNoteStatusSummaryState({
-    note: { thesis: "Claim", threeLineSummary: ["one", "two", "three"], distillationStatus: "confirmed" },
+    note: { thesis: "Claim", threeLineSummary: [], distillationStatus: "confirmed" },
     relationState: "loaded",
     relationCount: 1
   });

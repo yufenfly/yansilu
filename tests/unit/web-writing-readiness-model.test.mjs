@@ -97,7 +97,7 @@ test("note writing readiness becomes project-ready once boundary and relation ex
   assert.match(readiness.actionLabel, /确定可写主题/);
 });
 
-test("note writing readiness stays basket-ready when there are only wikilinks but no explicit relations", () => {
+test("note writing readiness treats a body wikilink as a real relation", () => {
   const readiness = deriveNoteWritingReadiness(
     {
       status: "active",
@@ -108,15 +108,14 @@ test("note writing readiness stays basket-ready when there are only wikilinks bu
     },
     {
       relationState: "loaded",
-      explicitRelationCount: 0,
+      explicitRelationCount: 1,
       wikilinkCount: 1,
       themeSignalCount: 1
     }
   );
 
-  assert.equal(readiness.level, "basket_ready");
-  assert.match(readiness.hint, /关联/);
-  assert.match(readiness.hint, /适合形成文章/);
+  assert.equal(readiness.level, "project_ready");
+  assert.match(readiness.hint, /确定可写主题/);
 });
 
 test("note writing readiness becomes strong-model-ready once theme signals are richer", () => {
@@ -197,7 +196,7 @@ test("basket writing readiness keeps relation fetch errors distinct from missing
   assert.match(readiness.hint, /读取失败|稍后重试|手动确认关系/);
 });
 
-test("explicit relation counting excludes markdown wikilinks and hidden relations", () => {
+test("explicit relation counting includes markdown wikilinks and excludes hidden relations", () => {
   const count = countExplicitSemanticRelations({
     outgoingLinks: [
       { relationType: "associated_with", rationale: "markdown_wikilink", status: "confirmed" },
@@ -210,7 +209,7 @@ test("explicit relation counting excludes markdown wikilinks and hidden relation
     ]
   });
 
-  assert.equal(count, 2);
+  assert.equal(count, 3);
 });
 
 test("project preflight description reports ready status clearly", () => {

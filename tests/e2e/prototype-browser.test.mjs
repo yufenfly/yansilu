@@ -1663,7 +1663,7 @@ test("prototype clears stale bottom thinking notice on note switch", async (t) =
   }, 7000);
 });
 
-test("prototype permanent note distillation panel saves thesis and three-line summary", async (t) => {
+test("prototype permanent note saves a current viewpoint and shows how it formed", async (t) => {
   if (process.env.RUN_BROWSER_E2E !== "1") {
     t.skip("Set RUN_BROWSER_E2E=1 to enable browser e2e in local runs.");
     return;
@@ -1677,7 +1677,8 @@ test("prototype permanent note distillation panel saves thesis and three-line su
   const { apiBase, page } = stack;
 
   await page.waitForFunction(() => document.querySelector("#importPanel")?.classList.contains("hidden"));
-  await page.waitForFunction(() => !document.querySelector("#markdownPanel")?.classList.contains("hidden"));
+  await openOriginalNoteBox(page);
+  await page.locator("#editorWorkspace").waitFor({ state: "visible" });
 
   await createAndSaveNoteViaEditor(
     page,
@@ -1689,35 +1690,38 @@ test("prototype permanent note distillation panel saves thesis and three-line su
 
   await page.locator("#btnShowRelated").click();
   await page.locator('[data-note-distillation-form] textarea[name="thesis"]').waitFor({ state: "visible" });
-  await page.locator('[data-note-distillation-form] textarea[name="boundaryOrCounterpoint"]').waitFor({ state: "visible" });
 
   await page.fill('[data-note-distillation-form] textarea[name="thesis"]', "Distilled thesis.");
-  await page.fill('[data-note-distillation-form] textarea[name="summary1"]', "Line one.");
-  await page.fill('[data-note-distillation-form] textarea[name="summary2"]', "Line two.");
-  await page.fill('[data-note-distillation-form] textarea[name="summary3"]', "Line three.");
-  await page.click("[data-note-distillation-confirm]");
+  await page.fill('[data-note-distillation-form] textarea[name="startingQuestion"]', "What makes a viewpoint reusable?");
+  await page.click('[data-note-distillation-form] button[type="submit"]');
 
   await waitFor(async () => {
     const statusText = await currentStatusText(page);
-    assert.match(String(statusText || ""), /提炼内容已整理到正文/);
+    assert.match(String(statusText || ""), /当前观点已保存/);
   }, 10000);
 
   await waitFor(async () => {
     const note = await fetchJson(apiBase, `/api/v1/notes/${encodeURIComponent(noteId)}`);
     assert.equal(note.status, 200);
     assert.equal(note.json.item.thesis, "Distilled thesis.");
-    assert.deepEqual(note.json.item.threeLineSummary, ["Line one.", "Line two.", "Line three."]);
+    assert.deepEqual(note.json.item.threeLineSummary, []);
+    assert.equal(note.json.item.startingQuestion, "What makes a viewpoint reusable?");
     assert.equal(note.json.item.distillationStatus, "confirmed");
     assert.match(note.json.item.body, /## 提炼观点/);
-    assert.match(note.json.item.body, /### 核心判断\n\nDistilled thesis\./);
+    assert.match(note.json.item.body, /### 当前观点\n\nDistilled thesis\./);
   }, 10000);
 
-  await page.locator("[data-permanent-workspace-pane='relations']").waitFor({ state: "visible" });
-  await page.locator("[data-permanent-workspace-tab='viewpoint']", { hasText: "已确认" }).click();
-  await page.locator("[data-note-distillation-section]", { hasText: "提炼观点" }).waitFor({ state: "visible" });
-  await page.locator("[data-note-distillation-close]", { hasText: "关闭" }).waitFor({ state: "visible" });
-  await page.locator("[data-note-distillation-confirm]", { hasText: "整理到正文" }).waitFor({ state: "visible" });
-  assert.equal(await page.locator('[data-note-distillation-form] select[name="distillationStatus"]').count(), 0);
+  await page.locator("[data-permanent-workspace-tab='viewpoint']", { hasText: "当前观点" }).click();
+  await page.locator("[data-note-distillation-section]", { hasText: "你现在认为是什么？" }).waitFor({ state: "visible" });
+  await page.locator("#relatedPanel [data-permanent-workspace-tab='relations']:visible", { hasText: "怎么形成的" }).click();
+  await page.locator("#relatedPanel [data-permanent-workspace-pane='relations']:visible").waitFor({ state: "visible" });
+  const formationState = await page.evaluate(() => ({
+    text: document.querySelector("#relatedPanel [data-permanent-workspace-pane='relations']:not([hidden])")?.textContent || "",
+    note: window.__prototypeEditor?.activeNote?.() || null
+  }));
+  assert.match(formationState.text, /What makes a viewpoint reusable\?/);
+  assert.match(formationState.text, /Distilled thesis\./);
+  assert.equal(await page.locator("[data-note-distillation-confirm]").count(), 0);
 });
 
 test("prototype main-path card refreshes relation state and does not leak stale relation status across note switches", async (t) => {
@@ -1840,7 +1844,7 @@ test("prototype permanent relation workspace saves manually, refreshes before sa
   await ensureNoteMode(page);
   await page.locator("#btnShowRelated").click();
 
-  await page.locator('[data-note-main-path-section] [data-note-main-route-action="relations"]').click();
+  await page.locator('#relatedPanel [data-permanent-relation-action="open"][data-permanent-relation-mode="manual"]:visible').click();
 
   const workspace = page.locator("[data-permanent-relation-workspace]");
   await workspace.waitFor({ state: "visible" });
@@ -1854,7 +1858,7 @@ test("prototype permanent relation workspace saves manually, refreshes before sa
 
   await page.locator("[data-permanent-relation-target-search]").fill("Relation Workspace Target");
   await page.locator(`[data-permanent-relation-manual-target="${target.json.item.id}"]`).click();
-  await page.locator('[data-permanent-relation-field="relationType"]').selectOption("supports");
+  await page.locator('[data-permanent-relation-type-choice="supports"]').click();
   await page.locator('[data-permanent-relation-field="rationale"]').fill(
     "This source should support the target because it states the relation workflow as a clear, reviewable sequence."
   );
@@ -1872,6 +1876,11 @@ test("prototype permanent relation workspace saves manually, refreshes before sa
     const relation = await fetchJson(apiBase, `/api/v1/notes/${encodeURIComponent(source.json.item.id)}/relations`);
     assert.equal(relation.status, 200);
     assert.equal(relation.json.item.outgoingLinks.some((link) => link.toNoteId === target.json.item.id && link.relationType === "supports"), true);
+    const thinkingStatus = await page.evaluate(
+      (noteId) => window.__prototypeState?.notes?.find((note) => note.id === noteId)?.thinkingStatus?.status || "",
+      source.json.item.id
+    );
+    assert.equal(thinkingStatus, "ready_for_index");
   }, 10000);
 
   const firstPostIndex = relationMethods.indexOf("POST");
@@ -1965,7 +1974,7 @@ test("prototype permanent relation workspace saves a searched relation in place"
   await page.locator('.explorer-item[data-kind="file"]', { hasText: "AI Relation Source" }).click();
   await ensureNoteMode(page);
   await page.locator("#btnShowRelated").click();
-  await page.locator('[data-permanent-relation-action="open"][data-permanent-relation-mode="manual"]').click();
+  await page.locator('#relatedPanel [data-permanent-relation-action="open"][data-permanent-relation-mode="manual"]:visible').click();
 
   const workspace = page.locator("[data-permanent-relation-workspace]");
   await workspace.waitFor({ state: "visible" });
@@ -1978,7 +1987,7 @@ test("prototype permanent relation workspace saves a searched relation in place"
   }, 10000);
 
   await page.locator(`[data-permanent-relation-manual-target="${target.json.item.id}"]`).click();
-  await page.locator('[data-permanent-relation-field="relationType"]').selectOption("qualifies");
+  await page.locator('[data-permanent-relation-type-choice="qualifies"]').click();
   await page.locator('[data-permanent-relation-field="rationale"]').fill("AI Relation Target qualifies AI Relation Source because it explains the human confirmation boundary.");
   await page.locator("[data-permanent-relation-form] button[type='submit']").click();
 

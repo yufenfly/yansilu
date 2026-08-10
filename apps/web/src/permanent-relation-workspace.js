@@ -32,19 +32,29 @@ const PERMANENT_RELATION_WORKSPACE_TYPES = RELATION_CREATE_TYPES.filter((type) =
 
 const COMMON_RELATION_CHOICES = [
   {
+    type: "associated_with",
+    title: "只是有关",
+    note: "先记下关联，之后再判断具体关系。"
+  },
+  {
     type: "supports",
-    title: "支持它",
-    note: "这条笔记给前一条判断增加证据或理由。"
+    title: "支持这个观点",
+    note: "它增加了证据或理由。"
   },
   {
     type: "contradicts",
-    title: "不同意它",
-    note: "这条笔记提出反例、冲突或不同判断。"
+    title: "提出不同看法",
+    note: "它带来了反例或不同判断。"
   },
   {
-    type: "associated_with",
-    title: "让我想到它",
-    note: "它们有关，但你暂时不需要给关系下更细的定义。"
+    type: "qualifies",
+    title: "补充适用条件",
+    note: "它说明这个观点何时成立。"
+  },
+  {
+    type: "example_of",
+    title: "提供一个例子",
+    note: "它让这个观点更具体。"
   }
 ];
 
@@ -57,9 +67,10 @@ function relationWorkspaceTypeOptions(selected = "associated_with") {
 
 function renderCommonRelationChoices(selected = "associated_with") {
   const active = cleanText(selected).toLowerCase() || "associated_with";
+  const commonActive = COMMON_RELATION_CHOICES.some((choice) => choice.type === active);
   return `
     <section class="permanent-relation-type-choice" aria-label="选择关系">
-      <span>它和这条笔记是什么关系？</span>
+      <span>这条笔记对当前观点有什么影响？</span>
       <div class="permanent-relation-type-choice-grid">
         ${COMMON_RELATION_CHOICES.map((choice) => `
           <button
@@ -73,7 +84,7 @@ function renderCommonRelationChoices(selected = "associated_with") {
           </button>
         `).join("")}
       </div>
-      <details class="permanent-relation-more-types">
+      <details class="permanent-relation-more-types"${commonActive ? "" : " open"}>
         <summary>更多关系</summary>
         <label>
           <span>需要更具体时再选</span>
@@ -269,7 +280,7 @@ export function renderPermanentRelationWorkspace({
                   </div>
                   <div class="permanent-relation-search">
                     <label>目标笔记</label>
-                    <input type="search" data-permanent-relation-target-search value="${escapeHtml(workspaceState.manualQuery)}" placeholder="${selectedTarget ? "已选择目标笔记" : "输入关键词，选择要关联的永久笔记"}" autocomplete="off" />
+                    <input type="search" data-permanent-relation-target-search value="${escapeHtml(workspaceState.manualQuery)}" placeholder="${selectedTarget ? "已选择目标笔记" : "输入关键词，选择要关联的永久笔记"}" autocomplete="off" ${selectedTarget ? "" : "autofocus"} />
                     <div class="permanent-relation-dropdown" data-permanent-relation-manual-results${selectedTarget || !hasManualQuery ? " hidden" : ""}>
                       ${
                         selectedTarget
@@ -286,8 +297,8 @@ export function renderPermanentRelationWorkspace({
           <form class="permanent-relation-confirm ${isEditingExisting ? "is-editing-existing" : ""}" data-permanent-relation-form ${showingAiTargets ? "hidden" : ""}>
             ${renderCommonRelationChoices(relationTypeValue)}
             <label>
-              <span>为什么这么想？</span>
-              <textarea name="rationale" data-permanent-relation-field="rationale" required placeholder="例如：这条笔记补充了前一条判断在什么条件下成立。">${escapeHtml(rationaleValue)}</textarea>
+              <span>为什么？</span>
+              <textarea name="rationale" data-permanent-relation-field="rationale" required placeholder="用一句话说明它怎样影响了当前观点。">${escapeHtml(rationaleValue)}</textarea>
             </label>
             <input type="hidden" name="insightQuestion" data-permanent-relation-field="insightQuestion" value="${escapeHtml(workspaceState.insightQuestion)}">
             ${workspaceState.error ? `<div class="semantic-relation-form-error">${escapeHtml(workspaceState.error)}</div>` : ""}

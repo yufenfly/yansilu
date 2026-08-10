@@ -22,15 +22,13 @@ export function distillationSummaryForSidebarFlow(notes = [], deps = {}) {
   return notes.reduce(
     (acc, note) => {
       const thesis = String(note?.thesis || "").trim();
-      const summary = Array.isArray(note?.threeLineSummary) ? note.threeLineSummary.filter((item) => String(item || "").trim()) : [];
       const confirmed = distillationStatusOf(note) === "confirmed";
       if (!thesis) acc.missingThesis += 1;
-      if (summary.length < 3) acc.missingSummary += 1;
-      if (!confirmed && thesis && summary.length >= 3) acc.needsConfirm += 1;
+      if (!confirmed && thesis) acc.needsConfirm += 1;
       if (!noteHasBoundarySignal(note)) acc.missingBoundary += 1;
       if (!confirmed) acc.pending += 1;
       if (confirmed) acc.confirmed += 1;
-      if (confirmed && thesis && summary.length >= 3) acc.writingReady += 1;
+      if (confirmed && thesis) acc.writingReady += 1;
       return acc;
     },
     {
@@ -38,7 +36,6 @@ export function distillationSummaryForSidebarFlow(notes = [], deps = {}) {
       confirmed: 0,
       writingReady: 0,
       missingThesis: 0,
-      missingSummary: 0,
       needsConfirm: 0,
       missingBoundary: 0
     }
@@ -69,7 +66,6 @@ export function buildExplorerSidebarFlowState({ rootId = "", currentNotes = [], 
   const distillation = distillationSummaryForSidebarFlow(originalNotes.filter((note) => isPermanentLikeNote(note)), deps);
   const topGaps = [
     distillation.missingThesis ? `缺一句话判断 ${distillation.missingThesis}` : "",
-    distillation.missingSummary ? `缺三句话压缩 ${distillation.missingSummary}` : "",
     distillation.needsConfirm ? `待确认观点 ${distillation.needsConfirm}` : "",
     distillation.missingBoundary ? `缺边界/反例 ${distillation.missingBoundary}` : ""
   ].filter(Boolean);
@@ -95,8 +91,8 @@ export function buildExplorerSidebarFlowState({ rootId = "", currentNotes = [], 
   const steps = isOriginal
     ? [
         ["写一句判断", distillation.missingThesis < originalNotes.length],
-        ["压缩成三句话", distillation.missingSummary < originalNotes.length],
         ["确认观点", distillation.confirmed > 0],
+        ["建立关系", linkedOriginalCount > 0],
         ["写作中心", distillation.writingReady > 0]
       ]
     : [

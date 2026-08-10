@@ -44,7 +44,7 @@ test("permanent note sidebar status summary stays mounted for sidebar refreshes"
     note: {
       id: "note-a",
       thesis: "claim",
-      threeLineSummary: ["one", "two", "three"],
+      threeLineSummary: [],
       distillationStatus: "confirmed"
     },
     relationState: "loaded",

@@ -9,7 +9,6 @@ export function buildPermanentNoteMainPathActionModel({
 } = {}) {
   const viewpoint = architecture.viewpoint || {};
   const thesis = viewpoint.thesis;
-  const summary = Array.isArray(viewpoint.summary) ? viewpoint.summary : [];
   const confirmed = Boolean(viewpoint.confirmed);
   const relation = architecture.relation || {};
   const relationState = String(relation.relationState || overview.relationState || "loaded").trim();
@@ -18,13 +17,11 @@ export function buildPermanentNoteMainPathActionModel({
   const tagRelatedCount = Number(overview.tagRelatedCount || 0);
   const thinExplicitRelationCount = Number(relation.thinExplicitRelationCount || 0);
   const primaryAction =
-    !thesis || summary.length < 3 || !confirmed
+    !thesis || !confirmed
       ? "distillation"
-      : distillationInfo.focusTarget === "boundary"
-        ? "distillation"
-        : relationState === "loading" || relationState === "error" || explicitRelationCount === 0 || thinExplicitRelationCount > 0
-          ? "relations"
-          : "writing";
+      : relationState === "loading" || relationState === "error" || explicitRelationCount === 0 || thinExplicitRelationCount > 0
+        ? "relations"
+        : "writing";
   const steps = [
     {
       label: "提炼观点",
@@ -105,6 +102,7 @@ export function buildPermanentNoteRelationActionStep({
                 ? "现在只有标签上的接近，先挑一条最关键的关系写出来。"
                 : "先关联一条真正相关的永久笔记。",
     action: "relations",
+    focusTarget: "create",
     actionLabel:
       thinExplicitRelationCount > 0
         ? "补关系说明"

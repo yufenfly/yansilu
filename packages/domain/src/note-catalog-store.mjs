@@ -157,19 +157,13 @@ function renderConfirmedDistillationSection(note = {}) {
   const thesis = cleanDistillationBlockText(note.thesis);
   const summary = Array.isArray(note.threeLineSummary) ? note.threeLineSummary.map(cleanDistillationBlockText).filter(Boolean).slice(0, 3) : [];
   const boundaryOrCounterpoint = cleanDistillationBlockText(note.boundaryOrCounterpoint);
-  const lines = [
-    "## 提炼观点",
-    "",
-    "### 核心判断",
-    "",
-    thesis,
-    "",
-    "### 三句话压缩",
-    ""
-  ];
-  summary.forEach((item, index) => {
-    lines.push(`${index + 1}. ${item}`);
-  });
+  const lines = ["## 提炼观点", "", "### 当前观点", "", thesis];
+  if (summary.length) {
+    lines.push("", "### 补充说明", "");
+    summary.forEach((item, index) => {
+      lines.push(`${index + 1}. ${item}`);
+    });
+  }
   if (boundaryOrCounterpoint) {
     lines.push("", "### 边界", "", boundaryOrCounterpoint);
   }
@@ -362,7 +356,7 @@ function normalizeDistillationStatus(value, fallback = "missing") {
 function distillationFieldsFromFrontmatter(frontmatter = {}) {
   const thesis = normalizeOptionalText(frontmatter.thesis);
   const summaryInput = frontmatter.three_line_summary ?? frontmatter.threeLineSummary ?? parseInlineJsonArray(frontmatter.three_line_summary);
-  const threeLineSummary = normalizeStringArray(summaryInput, { exactLength: 3 });
+  const threeLineSummary = normalizeStringArray(summaryInput).slice(0, 3);
   const fallbackStatus = thesis || threeLineSummary.length ? "draft" : "missing";
   return {
     thesis,
@@ -380,7 +374,7 @@ function distillationFieldsFromInput(input = {}, fallbackFrontmatter = {}) {
   const summaryInput = summaryExplicit
     ? input.threeLineSummary ?? input.three_line_summary ?? parseInlineJsonArray(input.threeLineSummary)
     : fallback.threeLineSummary;
-  const threeLineSummary = normalizeStringArray(summaryInput, { exactLength: 3 });
+  const threeLineSummary = normalizeStringArray(summaryInput).slice(0, 3);
   const fallbackStatus = thesis || threeLineSummary.length ? "draft" : "missing";
   const distillationStatus = statusExplicit
     ? normalizeDistillationStatus(input.distillationStatus ?? input.distillation_status, fallbackStatus)
@@ -390,6 +384,116 @@ function distillationFieldsFromInput(input = {}, fallbackFrontmatter = {}) {
     threeLineSummary,
     distillationStatus
   };
+}
+
+function normalizeViewpointHistory(value) {
+  const source = Array.isArray(value) ? value : parseInlineJsonArray(value) || [];
+  return source
+    .map((item) => {
+      if (item && typeof item === "object" && !Array.isArray(item)) return item;
+      try {
+        const parsed = JSON.parse(String(item || ""));
+        return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+      } catch {
+        return null;
+      }
+    })
+    .map((item) => ({
+      previousThesis: normalizeOptionalText(item?.previousThesis ?? item?.previous_thesis),
+      thesis: normalizeOptionalText(item?.thesis),
+      reason: normalizeOptionalText(item?.reason),
+      changedAt: normalizeOptionalText(item?.changedAt ?? item?.changed_at),
+      sourceNoteIds: normalizeStringArray(item?.sourceNoteIds ?? item?.source_note_ids)
+    }))
+    .filter((item) => item.previousThesis && item.thesis && item.reason);
+}
+
+function normalizePendingViewpointRevision(value) {
+  const source = parseInlineJsonObject(value);
+  if (!source || typeof source !== "object" || Array.isArray(source)) return null;
+  const previousThesis = normalizeOptionalText(source.previousThesis ?? source.previous_thesis);
+  const thesis = normalizeOptionalText(source.thesis);
+  if (!previousThesis || !thesis || previousThesis === thesis) return null;
+  return {
+    previousThesis,
+    thesis,
+    reason: normalizeOptionalText(source.reason),
+    changedAt: normalizeOptionalText(source.changedAt ?? source.changed_at),
+    sourceNoteIds: normalizeStringArray(source.sourceNoteIds ?? source.source_note_ids)
+  };
+}
+
+function viewpointFieldsFromFrontmatter(frontmatter = {}) {
+  return {
+    startingQuestion: normalizeOptionalText(frontmatter.starting_question ?? frontmatter.startingQuestion),
+    viewpointHistory: normalizeViewpointHistory(frontmatter.viewpoint_history ?? frontmatter.viewpointHistory),
+    pendingViewpointRevision: normalizePendingViewpointRevision(
+      frontmatter.pending_viewpoint_revision ?? frontmatter.pendingViewpointRevision
+    )
+  };
+}
+
+function viewpointFieldsFromInput(input = {}, fallbackFrontmatter = {}) {
+  const fallback = viewpointFieldsFromFrontmatter(fallbackFrontmatter);
+  const startingQuestion = input.startingQuestion !== undefined || input.starting_question !== undefined
+    ? normalizeOptionalText(input.startingQuestion ?? input.starting_question)
+    : fallback.startingQuestion;
+  const currentThesis = normalizeOptionalText(fallbackFrontmatter.thesis);
+  const nextThesis = input.thesis === undefined ? currentThesis : normalizeOptionalText(input.thesis);
+  const changeReason = normalizeOptionalText(input.thesisChangeReason ?? input.thesis_change_reason);
+  const sourceNoteIdsExplicit = input.viewpointChangeSourceNoteIds !== undefined || input.viewpoint_change_source_note_ids !== undefined;
+  const sourceNoteIds = normalizeStringArray(input.viewpointChangeSourceNoteIds ?? input.viewpoint_change_source_note_ids);
+  const changeStatus = normalizeOptionalText(input.viewpointChangeStatus ?? input.viewpoint_change_status).toLowerCase();
+  const commitChange = input.commitViewpointChange === true || input.commit_viewpoint_change === true;
+  const historyExplicit = input.viewpointHistory !== undefined || input.viewpoint_history !== undefined;
+  const pendingExplicit = input.pendingViewpointRevision !== undefined || input.pending_viewpoint_revision !== undefined;
+  const viewpointHistory = historyExplicit
+    ? normalizeViewpointHistory(input.viewpointHistory ?? input.viewpoint_history)
+    : [...fallback.viewpointHistory];
+  let pendingViewpointRevision = pendingExplicit
+    ? normalizePendingViewpointRevision(input.pendingViewpointRevision ?? input.pending_viewpoint_revision)
+    : normalizePendingViewpointRevision(fallback.pendingViewpointRevision);
+
+  if (!historyExplicit && commitChange && pendingViewpointRevision) {
+    const previousThesis = pendingViewpointRevision.previousThesis;
+    if (nextThesis === previousThesis) {
+      pendingViewpointRevision = null;
+    } else {
+      if (!changeReason) {
+        throw noteValidationError(
+          "VIEWPOINT_CHANGE_REASON_REQUIRED",
+          "当前观点发生变化时，需要说明这次为什么改变。",
+          { previousThesis, thesis: nextThesis }
+        );
+      }
+      viewpointHistory.push({
+        previousThesis,
+        thesis: nextThesis,
+        reason: changeReason,
+        changedAt: new Date().toISOString(),
+        sourceNoteIds: sourceNoteIdsExplicit ? sourceNoteIds : pendingViewpointRevision.sourceNoteIds
+      });
+      pendingViewpointRevision = null;
+    }
+  } else if (!historyExplicit && currentThesis && nextThesis && currentThesis !== nextThesis) {
+    if (!changeReason) {
+      throw noteValidationError(
+        "VIEWPOINT_CHANGE_REASON_REQUIRED",
+        "当前观点发生变化时，需要说明这次为什么改变。",
+        { previousThesis: currentThesis, thesis: nextThesis }
+      );
+    }
+    const revision = {
+      previousThesis: pendingViewpointRevision?.previousThesis || currentThesis,
+      thesis: nextThesis,
+      reason: changeReason,
+      changedAt: new Date().toISOString(),
+      sourceNoteIds
+    };
+    if (changeStatus === "draft") pendingViewpointRevision = revision;
+    else viewpointHistory.push(revision);
+  }
+  return { startingQuestion, viewpointHistory, pendingViewpointRevision };
 }
 
 function inputRequestsConfirmedDistillation(input = {}) {
@@ -418,10 +522,12 @@ function permanentMetadataFromFrontmatter(frontmatter = {}) {
     ai_assisted: frontmatter.ai_assisted
   });
   const distillation = distillationFieldsFromFrontmatter(frontmatter);
+  const viewpoint = viewpointFieldsFromFrontmatter(frontmatter);
   return {
     originalityStatus: normalizeOriginalityStatus(frontmatter.originality_status, "warning"),
     originalitySimilarity: normalizeOptionalNumber(frontmatter.originality_similarity),
     authorship,
+    ...viewpoint,
     ...distillation
   };
 }
@@ -429,6 +535,7 @@ function permanentMetadataFromFrontmatter(frontmatter = {}) {
 function permanentMetadataFromInput(input = {}, fallbackFrontmatter = {}) {
   const fallbackMeta = permanentMetadataFromFrontmatter(fallbackFrontmatter);
   const distillation = distillationFieldsFromInput(input, fallbackFrontmatter);
+  const viewpoint = viewpointFieldsFromInput(input, fallbackFrontmatter);
   return {
     originalityStatus: normalizeOriginalityStatus(
       input.originalityStatus ?? input.originality_status,
@@ -442,6 +549,7 @@ function permanentMetadataFromInput(input = {}, fallbackFrontmatter = {}) {
       user_confirmed: input.authorshipConfirmed ?? fallbackMeta.authorship.user_confirmed,
       ai_assisted: input.authorshipAiAssisted ?? fallbackMeta.authorship.ai_assisted
     }),
+    ...viewpoint,
     ...distillation
   };
 }
@@ -453,8 +561,9 @@ function upsertPermanentNoteMeta(db, noteId, meta = {}, boundaryOrCounterpoint =
     `INSERT INTO permanent_note_meta
      (note_id, core_claim, rationale, boundary_or_counterpoint, originality_status,
       originality_similarity, user_confirmed, ai_assisted, thesis,
-      three_line_summary_json, distillation_status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      three_line_summary_json, distillation_status, starting_question, viewpoint_history_json,
+      pending_viewpoint_revision_json)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(note_id) DO UPDATE SET
        core_claim = excluded.core_claim,
        rationale = excluded.rationale,
@@ -465,7 +574,10 @@ function upsertPermanentNoteMeta(db, noteId, meta = {}, boundaryOrCounterpoint =
        ai_assisted = excluded.ai_assisted,
        thesis = excluded.thesis,
        three_line_summary_json = excluded.three_line_summary_json,
-       distillation_status = excluded.distillation_status`
+       distillation_status = excluded.distillation_status,
+       starting_question = excluded.starting_question,
+       viewpoint_history_json = excluded.viewpoint_history_json,
+       pending_viewpoint_revision_json = excluded.pending_viewpoint_revision_json`
   ).run(
     noteId,
     String(meta.coreClaim || meta.core_claim || meta.thesis || "").trim(),
@@ -477,7 +589,10 @@ function upsertPermanentNoteMeta(db, noteId, meta = {}, boundaryOrCounterpoint =
     authorship.ai_assisted === true ? 1 : 0,
     String(meta.thesis || "").trim() || null,
     JSON.stringify(Array.isArray(meta.threeLineSummary) ? meta.threeLineSummary : []),
-    normalizeDistillationStatus(meta.distillationStatus ?? meta.distillation_status, "missing")
+    normalizeDistillationStatus(meta.distillationStatus ?? meta.distillation_status, "missing"),
+    String(meta.startingQuestion || meta.starting_question || "").trim() || null,
+    JSON.stringify(normalizeViewpointHistory(meta.viewpointHistory ?? meta.viewpoint_history)),
+    JSON.stringify(normalizePendingViewpointRevision(meta.pendingViewpointRevision ?? meta.pending_viewpoint_revision))
   );
 }
 
@@ -783,10 +898,52 @@ async function healCatalogScope(vaultPath, db, options = {}) {
   await normalizeCatalogRowsForMetadata(vaultPath, db, rows);
 }
 
-function attachNoteThinkingStatus(note) {
+function explicitRelationCountForNote(db, noteId) {
+  if (!db || !noteId) return 0;
+  const row = db.prepare(
+    `SELECT COUNT(*) AS relation_count
+     FROM links l
+     JOIN notes from_note ON from_note.id = l.from_note_id
+     JOIN notes to_note ON to_note.id = l.to_note_id
+     WHERE (l.from_note_id = ? OR l.to_note_id = ?)
+       AND from_note.deleted_at IS NULL
+       AND to_note.deleted_at IS NULL
+       AND COALESCE(l.status, 'confirmed') NOT IN ('dismissed', 'archived')`
+  ).get(noteId, noteId);
+  return Number(row?.relation_count || 0);
+}
+
+function explicitRelationCountsForNotes(db, noteIds = []) {
+  const includedIds = new Set(noteIds.filter(Boolean));
+  const counts = new Map([...includedIds].map((noteId) => [noteId, 0]));
+  if (!db || includedIds.size === 0) return counts;
+  const rows = db.prepare(
+    `SELECT l.from_note_id, l.to_note_id
+     FROM links l
+     JOIN notes from_note ON from_note.id = l.from_note_id
+     JOIN notes to_note ON to_note.id = l.to_note_id
+     WHERE from_note.deleted_at IS NULL
+       AND to_note.deleted_at IS NULL
+       AND COALESCE(l.status, 'confirmed') NOT IN ('dismissed', 'archived')`
+  ).all();
+  for (const row of rows) {
+    if (includedIds.has(row.from_note_id)) {
+      counts.set(row.from_note_id, (counts.get(row.from_note_id) || 0) + 1);
+    }
+    if (row.to_note_id !== row.from_note_id && includedIds.has(row.to_note_id)) {
+      counts.set(row.to_note_id, (counts.get(row.to_note_id) || 0) + 1);
+    }
+  }
+  return counts;
+}
+
+function attachNoteThinkingStatus(note, db = null, knownExplicitRelationCount = null) {
+  const explicitRelationCount = note?.noteType === "permanent"
+    ? knownExplicitRelationCount ?? explicitRelationCountForNote(db, note.id)
+    : 0;
   return {
     ...note,
-    thinkingStatus: deriveNoteThinkingStatus(note)
+    thinkingStatus: deriveNoteThinkingStatus({ ...note, explicitRelationCount })
   };
 }
 
@@ -795,10 +952,15 @@ async function mapNoteRowsWithThinkingStatus(vaultPath, db, rows = []) {
     hydrateMarkdown: true,
     tolerateMissing: true
   });
+  const explicitRelationCounts = explicitRelationCountsForNotes(
+    db,
+    resolvedRows.filter((item) => item.row.note_type === "permanent").map((item) => item.row.id)
+  );
   return resolvedRows.map((item) => {
     const note = mapNoteRow(item.row);
+    const explicitRelationCount = explicitRelationCounts.get(note.id) || 0;
     if (!["permanent", "literature"].includes(note.noteType) || !item.parsed) {
-      return attachNoteThinkingStatus(note);
+      return attachNoteThinkingStatus(note, db, explicitRelationCount);
     }
     const boundaryOrCounterpoint = boundaryValueFromInput(item.parsed.frontmatter || {});
     const permanentMeta = item.row.note_type === "permanent" ? permanentMetadataFromFrontmatter(item.parsed.frontmatter || {}) : null;
@@ -810,11 +972,14 @@ async function mapNoteRowsWithThinkingStatus(vaultPath, db, rows = []) {
             thesis: permanentMeta.thesis,
             threeLineSummary: permanentMeta.threeLineSummary,
             distillationStatus: permanentMeta.distillationStatus,
+            startingQuestion: permanentMeta.startingQuestion,
+            viewpointHistory: permanentMeta.viewpointHistory,
+            pendingViewpointRevision: permanentMeta.pendingViewpointRevision,
             authorship: permanentMeta.authorship
           }
         : {}),
       ...(boundaryOrCounterpoint ? { boundaryOrCounterpoint } : {})
-    });
+    }, db, explicitRelationCount);
   });
 }
 
@@ -1603,6 +1768,13 @@ export async function createNoteInDirectory(vaultPath, input = {}) {
       frontmatter.authorship = permanentMeta.authorship;
       if (permanentMeta.thesis) frontmatter.thesis = permanentMeta.thesis;
       if (permanentMeta.threeLineSummary.length) frontmatter.three_line_summary = permanentMeta.threeLineSummary;
+      if (permanentMeta.startingQuestion) frontmatter.starting_question = permanentMeta.startingQuestion;
+      if (permanentMeta.viewpointHistory.length) {
+        frontmatter.viewpoint_history = permanentMeta.viewpointHistory.map((item) => JSON.stringify(item));
+      }
+      if (permanentMeta.pendingViewpointRevision) {
+        frontmatter.pending_viewpoint_revision = permanentMeta.pendingViewpointRevision;
+      }
       if (permanentMeta.distillationStatus !== "missing" || permanentMeta.thesis || permanentMeta.threeLineSummary.length) {
         frontmatter.distillation_status = permanentMeta.distillationStatus;
       }
@@ -1651,6 +1823,9 @@ export async function createNoteInDirectory(vaultPath, input = {}) {
             thesis: permanentMeta.thesis,
             threeLineSummary: permanentMeta.threeLineSummary,
             distillationStatus: permanentMeta.distillationStatus,
+            startingQuestion: permanentMeta.startingQuestion,
+            viewpointHistory: permanentMeta.viewpointHistory,
+            pendingViewpointRevision: permanentMeta.pendingViewpointRevision,
             originalityStatus: permanentMeta.originalityStatus,
             ...(permanentMeta.originalitySimilarity !== null
               ? { originalitySimilarity: permanentMeta.originalitySimilarity }
@@ -1661,7 +1836,7 @@ export async function createNoteInDirectory(vaultPath, input = {}) {
       ...(boundaryOrCounterpoint ? { boundaryOrCounterpoint } : {}),
       createdAt: now,
       updatedAt: now
-    });
+    }, db);
   } finally {
     db.close();
   }
@@ -2592,6 +2767,9 @@ export async function getNoteById(vaultPath, noteId) {
             thesis: permanentMeta.thesis,
             threeLineSummary: permanentMeta.threeLineSummary,
             distillationStatus: permanentMeta.distillationStatus,
+            startingQuestion: permanentMeta.startingQuestion,
+            viewpointHistory: permanentMeta.viewpointHistory,
+            pendingViewpointRevision: permanentMeta.pendingViewpointRevision,
             originalityStatus: permanentMeta.originalityStatus,
             ...(permanentMeta.originalitySimilarity !== null
               ? { originalitySimilarity: permanentMeta.originalitySimilarity }
@@ -2600,7 +2778,7 @@ export async function getNoteById(vaultPath, noteId) {
           }
         : {}),
       ...(boundaryOrCounterpoint ? { boundaryOrCounterpoint } : {})
-    });
+    }, db);
   } finally {
     db.close();
   }
@@ -2674,6 +2852,11 @@ export async function updatePermanentNoteDistillation(vaultPath, noteId, input =
   return updateNoteContent(vaultPath, noteId, {
     thesis: input.thesis,
     threeLineSummary: input.threeLineSummary ?? input.three_line_summary,
+    startingQuestion: input.startingQuestion ?? input.starting_question,
+    thesisChangeReason: input.thesisChangeReason ?? input.thesis_change_reason,
+    viewpointChangeSourceNoteIds: input.viewpointChangeSourceNoteIds ?? input.viewpoint_change_source_note_ids,
+    viewpointChangeStatus: input.viewpointChangeStatus ?? input.viewpoint_change_status,
+    commitViewpointChange: input.commitViewpointChange ?? input.commit_viewpoint_change,
     distillationStatus: input.distillationStatus ?? input.distillation_status ?? "draft",
     authorship: note.authorship,
     originalityStatus: note.originalityStatus,
@@ -2690,16 +2873,13 @@ export async function confirmPermanentNoteDistillation(vaultPath, noteId, input 
       noteType: note.noteType
     });
   }
-  if (!note.thesis || !Array.isArray(note.threeLineSummary) || note.threeLineSummary.length !== 3) {
+  if (!note.thesis) {
     throw noteValidationError(
       "PERMANENT_DISTILLATION_INCOMPLETE",
-      "Permanent-note distillation requires thesis and exactly three summary lines before confirmation.",
+      "Permanent-note confirmation requires a current viewpoint.",
       {
         noteId,
-        missing: [
-          ...(!note.thesis ? ["thesis"] : []),
-          ...(!Array.isArray(note.threeLineSummary) || note.threeLineSummary.length !== 3 ? ["three_line_summary"] : [])
-        ]
+        missing: ["thesis"]
       }
     );
   }
@@ -2707,6 +2887,7 @@ export async function confirmPermanentNoteDistillation(vaultPath, noteId, input 
     body: upsertConfirmedDistillationSection(note.body, note),
     thesis: note.thesis,
     threeLineSummary: note.threeLineSummary,
+    startingQuestion: note.startingQuestion,
     distillationStatus: "confirmed",
     authorship: {
       user_confirmed: true,
@@ -3062,6 +3243,9 @@ export async function updateNoteContent(vaultPath, noteId, input = {}) {
     delete nextFrontmatter.boundaryOrCounterpoint;
     delete nextFrontmatter.threeLineSummary;
     delete nextFrontmatter.distillationStatus;
+    delete nextFrontmatter.startingQuestion;
+    delete nextFrontmatter.viewpointHistory;
+    delete nextFrontmatter.pendingViewpointRevision;
     if (effectiveRow.note_type === "permanent") {
       const boundaryOrCounterpoint = boundaryValueFromInput(input, preservedFrontmatter.boundary_or_counterpoint || preservedFrontmatter.boundaryOrCounterpoint);
       if (boundaryOrCounterpoint) nextFrontmatter.boundary_or_counterpoint = boundaryOrCounterpoint;
@@ -3074,6 +3258,18 @@ export async function updateNoteContent(vaultPath, noteId, input = {}) {
       else delete nextFrontmatter.thesis;
       if (permanentMeta.threeLineSummary.length) nextFrontmatter.three_line_summary = permanentMeta.threeLineSummary;
       else delete nextFrontmatter.three_line_summary;
+      if (permanentMeta.startingQuestion) nextFrontmatter.starting_question = permanentMeta.startingQuestion;
+      else delete nextFrontmatter.starting_question;
+      if (permanentMeta.viewpointHistory.length) {
+        nextFrontmatter.viewpoint_history = permanentMeta.viewpointHistory.map((item) => JSON.stringify(item));
+      } else {
+        delete nextFrontmatter.viewpoint_history;
+      }
+      if (permanentMeta.pendingViewpointRevision) {
+        nextFrontmatter.pending_viewpoint_revision = permanentMeta.pendingViewpointRevision;
+      } else {
+        delete nextFrontmatter.pending_viewpoint_revision;
+      }
       if (permanentMeta.distillationStatus !== "missing" || permanentMeta.thesis || permanentMeta.threeLineSummary.length) {
         nextFrontmatter.distillation_status = permanentMeta.distillationStatus;
       } else {
@@ -3159,6 +3355,9 @@ export async function updateNoteContent(vaultPath, noteId, input = {}) {
             thesis: permanentMeta.thesis,
             threeLineSummary: permanentMeta.threeLineSummary,
             distillationStatus: permanentMeta.distillationStatus,
+            startingQuestion: permanentMeta.startingQuestion,
+            viewpointHistory: permanentMeta.viewpointHistory,
+            pendingViewpointRevision: permanentMeta.pendingViewpointRevision,
             originalityStatus: permanentMeta.originalityStatus,
             ...(permanentMeta.originalitySimilarity !== null
               ? { originalitySimilarity: permanentMeta.originalitySimilarity }
@@ -3167,7 +3366,7 @@ export async function updateNoteContent(vaultPath, noteId, input = {}) {
           }
         : {}),
       ...(nextFrontmatter.boundary_or_counterpoint ? { boundaryOrCounterpoint: nextFrontmatter.boundary_or_counterpoint } : {})
-    });
+    }, db);
   } finally {
     db.close();
   }

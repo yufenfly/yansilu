@@ -24,7 +24,7 @@ function host(overrides = {}) {
       app.tab = tab;
     },
     permanentRelationWorkspaceAiCandidates: () => overrides.aiCandidates || [],
-    relationCreateDefaultType: () => "supports",
+    relationCreateDefaultType: () => "associated_with",
     syncPermanentRelationWorkspaceOverlay: () => {
       app.synced = true;
     },
@@ -63,6 +63,7 @@ test("permanent note sidebar controller opens relation workspace through a route
     assert.equal(app.permanentRelationWorkspaceState.open, true);
     assert.equal(app.permanentRelationWorkspaceState.mode, "manual");
     assert.equal(app.permanentRelationWorkspaceState.selectedTargetNoteId, "note-b");
+    assert.equal(app.permanentRelationWorkspaceState.relationType, "associated_with");
     assert.equal(app.permanentRelationWorkspaceState.entryRoute.returnTo, "right-sidebar");
     assert.equal(app.permanentRelationWorkspaceState.entryRoute.source, RELATION_ENTRY_SOURCES.RIGHT_SIDEBAR);
     assert.equal(app.visible, true);
@@ -88,6 +89,23 @@ test("relation draft keeps source metadata for future AI candidates without savi
   assert.equal(draft.candidateSource, "potential-relation-scan");
   assert.equal(draft.insertLinkOnSave, true);
   assert.deepEqual(draft.cursorRange, { from: 4, to: 4 });
+});
+
+test("manual relation target selection defaults to a visible relation choice", () => {
+  const app = host({
+    state: { notes: [{ id: "note-a" }, { id: "note-b" }] },
+    windowRef: { clearTimeout: () => {} }
+  });
+  app.permanentRelationSearchSerial = 0;
+  app.permanentRelationWorkspaceState = {
+    ...defaultPermanentRelationWorkspaceState("note-a"),
+    manualTargets: [{ id: "note-b", title: "B" }]
+  };
+
+  new PermanentRelationComposerController(app).chooseManualTarget("note-b");
+
+  assert.equal(app.permanentRelationWorkspaceState.selectedTargetNoteId, "note-b");
+  assert.equal(app.permanentRelationWorkspaceState.relationType, "associated_with");
 });
 
 test("editor relation entry opens composer without replacing the current tab", () => {

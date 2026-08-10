@@ -108,10 +108,10 @@ test("prototype note state helpers compute labels and distillation stages", () =
   assert.equal(distillationStatusOf({}), "missing");
   assert.equal(distillationStatusOf({ thesis: "判断" }), "draft");
   assert.equal(distillationStatusOf({ distillationStatus: "confirmed" }), "confirmed");
-  assert.equal(distillationReasonOf({ thesis: "判断", threeLineSummary: ["a"] }), "三句话压缩还差 2 句");
+  assert.equal(distillationReasonOf({ thesis: "判断", threeLineSummary: ["a"] }), "待确认观点");
   assert.equal(distillationStatusLabel("draft"), "待确认");
   assert.equal(distillationStageOf({ thesis: "判断", threeLineSummary: ["a", "b", "c"] }), "needs_confirm");
-  assert.equal(distillationStageLabel("needs_summary"), "待三句话压缩");
+  assert.equal(distillationStageOf({ thesis: "判断", threeLineSummary: ["a"] }), "needs_confirm");
 });
 
 test("prototype note state helpers build directory path labels", () => {

@@ -16,6 +16,7 @@ export function createEditorPaneHostDeps(deps = {}) {
     renderWorkspaceStatusHint = () => {},
     refreshDirectoryGraph = async () => false,
     renderAll = () => {},
+    currentVaultPath = () => "",
     currentNoteWritingLabel = "当前笔记"
   } = deps;
 
@@ -106,6 +107,7 @@ export function createEditorPaneHostDeps(deps = {}) {
     refreshDirectoryGraph,
     resolveLiteratureSectionLabels: currentLiteratureTemplateSectionLabels,
     resolveLiteratureSectionLabelCandidates: literatureTemplateSectionLabelCandidates,
+    vaultScope: currentVaultPath,
     onChromeChange: () => {
       renderStatusMeta();
       renderWorkspaceStatusHint();

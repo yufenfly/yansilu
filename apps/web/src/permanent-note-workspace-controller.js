@@ -2,6 +2,7 @@ import {
   renderPermanentNoteWorkspace
 } from "./permanent-note-workspace-view.js";
 import { permanentNoteViewpointState } from "./permanent-note-sidebar-architecture.js";
+import { renderPermanentNoteFormation } from "./permanent-note-formation-view.js";
 
 export class PermanentNoteWorkspaceController {
   constructor(host) {
@@ -44,6 +45,7 @@ export class PermanentNoteWorkspaceController {
         ${this.host.renderPermanentNoteDistillationSection(note)}
       `,
       relationsHtml: `
+        ${renderPermanentNoteFormation(note, this.host.currentSemanticRelations, { notes: this.host.state?.notes || [] })}
         ${this.host.renderPermanentNoteRelationAssistSection(note)}
         ${this.host.renderCurrentRelationSection(note.id, {
           relations: this.host.currentSemanticRelations,

@@ -33,7 +33,7 @@ test("sidebar flow detects network and distillation gaps", () => {
 
   const summary = distillationSummaryForSidebarFlow([
     { id: "n1", thesis: "", threeLineSummary: [] },
-    { id: "n2", thesis: "Claim", threeLineSummary: ["a", "b", "c"] }
+    { id: "n2", thesis: "Claim", threeLineSummary: [] }
   ], {
     distillationStatusOf: (note) => note.id === "n2" ? "confirmed" : "draft",
     noteHasBoundarySignal: (note) => note.id === "n2"
@@ -84,9 +84,10 @@ test("sidebar flow renders Smart Notes demo walkthrough when demo notes are pres
   const markup = renderExplorerSidebarFlowMarkup(state);
 
   assert.equal(state.kind, "smart-notes-demo");
-  assert.match(markup, /Smart Notes Demo 导览/);
-  assert.match(markup, /data-sidebar-flow-action="open-demo-note-relations"/);
-  assert.match(markup, /打开并关联/);
+  assert.match(markup, /3 分钟示例/);
+  assert.match(markup, /从记录到写作/);
+  assert.match(markup, /data-sidebar-flow-action="open-demo-note"/);
+  assert.match(markup, /打开第 1 步笔记/);
   assert.doesNotMatch(markup, /data-sidebar-flow-action="open-demo-writing"/);
   assert.doesNotMatch(markup, /\b(?:PN-SN|WP-SN|IC-SN)-/);
 });

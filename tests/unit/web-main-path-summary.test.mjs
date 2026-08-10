@@ -27,7 +27,7 @@ test("main-path summary calls for first explicit relation once note is confirmed
   const result = pane.permanentNoteMainPathSummaryV2(
     {
       thesis: "A stable claim.",
-      threeLineSummary: ["one", "two", "three"],
+      threeLineSummary: [],
       distillationStatus: "confirmed",
       authorship: { user_confirmed: true },
       status: "active",
@@ -46,7 +46,7 @@ test("main-path summary calls for first explicit relation once note is confirmed
   assert.match(result.summary, /关联一条有理由的永久笔记/);
 });
 
-test("main-path summary distinguishes wikilink-only notes from fully isolated notes", () => {
+test("main-path summary treats a body wikilink as an established relation", () => {
   const pane = createPane();
   const result = pane.permanentNoteMainPathSummaryV2(
     {
@@ -59,17 +59,16 @@ test("main-path summary distinguishes wikilink-only notes from fully isolated no
     },
     {
       relationState: "loaded",
-      explicitRelationCount: 0,
+      explicitRelationCount: 1,
       wikilinkCount: 2,
       tagRelatedCount: 0,
       themeSignalCount: 2
     }
   );
 
-  assert.equal(result.nextStep, "补关系说明");
-  assert.match(result.summary, /可能关系/);
+  assert.equal(result.nextStep, "先确定可写主题");
   assert.doesNotMatch(result.summary, /wikilink/);
-  assert.match(result.summary, /写清楚/);
+  assert.match(result.summary, /写作|题目|读者/);
 });
 
 test("main-path summary distinguishes tag-only theme hints from actual network connections", () => {

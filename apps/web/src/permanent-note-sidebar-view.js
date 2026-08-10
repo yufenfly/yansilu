@@ -15,9 +15,8 @@ export function renderPermanentNoteStatusSummary({
     relationCount
   });
   const thesis = summaryState.viewpoint.thesis;
-  const summary = summaryState.viewpoint.summary;
   const confirmed = summaryState.viewpoint.confirmed;
-  const viewpointLabel = !thesis ? "观点：待提纯" : summary.length < 3 ? "观点：待压缩" : confirmed ? "观点：已确认" : "观点：待确认";
+  const viewpointLabel = !thesis ? "观点：待提纯" : confirmed ? "观点：已确认" : "观点：待确认";
   const relationSummaryLabel =
     relationState === "error"
       ? "关联：读取失败"

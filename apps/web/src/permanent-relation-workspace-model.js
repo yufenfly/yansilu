@@ -1,6 +1,5 @@
 import {
-  isHiddenSemanticRelation,
-  isMarkdownWikilinkSemanticRelation
+  isHiddenSemanticRelation
 } from "./writing-readiness.js";
 import {
   relationWorkspaceExistingEdge,
@@ -194,7 +193,7 @@ export function permanentRelationWorkspaceExistingLinks(relations = null) {
   return [
     ...(Array.isArray(relations?.outgoingLinks) ? relations.outgoingLinks : []),
     ...(Array.isArray(relations?.backlinks) ? relations.backlinks : [])
-  ].filter((link) => !isHiddenSemanticRelation(link) && !isMarkdownWikilinkSemanticRelation(link));
+  ].filter((link) => !isHiddenSemanticRelation(link));
 }
 
 export function permanentRelationWorkspaceExistingLink(relations = null, sourceNoteId = "", targetNoteId = "") {

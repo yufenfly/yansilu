@@ -29,6 +29,8 @@ test("distillation state actions save fields and sync the open tab", async () =>
     thesis: "claim",
     threeLineSummary: ["a"],
     boundaryOrCounterpoint: "boundary",
+    viewpointChangeSourceNoteIds: ["source-1"],
+    commitViewpointChange: true,
     distillationStatus: "draft"
   }, {
     state,
@@ -58,12 +60,14 @@ test("distillation state actions save fields and sync the open tab", async () =>
       thesis: "claim",
       threeLineSummary: ["a"],
       boundaryOrCounterpoint: "boundary",
+      viewpointChangeSourceNoteIds: ["source-1"],
+      commitViewpointChange: true,
       distillationStatus: "draft"
     }],
     "render-distillation",
     "render-all"
   ]);
-  assert.deepEqual(status.calls.at(-1), { message: "提炼草稿已保存", tone: "ok" });
+  assert.deepEqual(status.calls.at(-1), { message: "观点草稿已保存", tone: "ok" });
 });
 
 test("distillation state actions save draft before confirming requested confirmed status", async () => {
@@ -97,7 +101,7 @@ test("distillation state actions save draft before confirming requested confirme
     ["update", "n1", "draft"],
     ["confirm", "n1", { aiAssisted: false }]
   ]);
-  assert.deepEqual(status.calls.at(-1), { message: "提炼内容已整理到正文", tone: "ok" });
+  assert.deepEqual(status.calls.at(-1), { message: "当前观点已保存", tone: "ok" });
 });
 
 test("distillation state actions return false when the note is missing", async () => {
@@ -118,7 +122,7 @@ test("distillation state actions report save failures", async () => {
   });
 
   assert.equal(result, false);
-  assert.deepEqual(status.calls.at(-1), { message: "提炼内容保存失败：network", tone: "bad" });
+  assert.deepEqual(status.calls.at(-1), { message: "当前观点保存失败：network", tone: "bad" });
 });
 
 test("distillation state actions confirm an existing note", async () => {

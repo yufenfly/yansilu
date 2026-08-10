@@ -11,7 +11,7 @@ test("permanent note action model keeps only the three main right-side actions",
     architecture: {
       viewpoint: {
         thesis: "A stable claim.",
-        summary: ["one", "two", "three"],
+        summary: [],
         confirmed: true
       },
       relation: {
@@ -43,6 +43,7 @@ test("permanent note action model keeps only the three main right-side actions",
     ["distillation", "relations", "writing"]
   );
   assert.equal(model.primaryStep.action, "relations");
+  assert.equal(model.primaryStep.focusTarget, "create");
   assert.ok(!model.steps.some((step) => step.action === "graph"));
 });
 
@@ -55,11 +56,12 @@ test("permanent note action panel preserves relation route attributes", () => {
       label: "整理关系",
       hint: "先关联一条真正相关的永久笔记。",
       action: "relations",
+      focusTarget: "create",
       actionLabel: "关联一条笔记"
     }
   }).replace(/\s+/g, " ");
 
   assert.match(html, /data-note-main-path-section/);
   assert.match(html, /data-main-path-next-action="relations"/);
-  assert.match(html, /data-note-main-route-action="relations"[^>]*>关联一条笔记<\/button>/);
+  assert.match(html, /data-note-main-route-action="relations"[^>]*data-note-main-route-focus="create"[^>]*>关联一条笔记<\/button>/);
 });

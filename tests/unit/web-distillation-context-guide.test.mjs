@@ -36,13 +36,18 @@ test("permanent-note distillation renders only the compact editing form", () => 
   });
 
   assert.match(html, /name="thesis"/);
+  assert.match(html, /你现在认为是什么？/);
+  assert.match(html, /name="startingQuestion"/);
+  assert.match(html, /data-viewpoint-change-reason hidden/);
   assert.match(html, /name="summary1"/);
   assert.match(html, /name="summary2"/);
   assert.match(html, /name="summary3"/);
   assert.match(html, /name="boundaryOrCounterpoint"/);
-  assert.doesNotMatch(html, /name="distillationStatus"/);
+  assert.match(html, /name="distillationStatus" value="confirmed"/);
   assert.doesNotMatch(html, /data-note-distillation-close/);
-  assert.match(html, />整理到正文</);
+  assert.match(html, />保存当前观点</);
+  assert.match(html, /补充说明和边界（可选）/);
+  assert.doesNotMatch(html, /data-note-distillation-confirm/);
   assert.doesNotMatch(html, /data-note-distillation-next/);
   assert.doesNotMatch(html, /data-note-distillation-focus=/);
   assert.doesNotMatch(html, /inspector-section-head-compact/);

@@ -36,59 +36,42 @@ function createClassList() {
   };
 }
 
-test("relation guidance defaults to counterexample when note body signals a counterexample", () => {
-  const note = {
-    body: "# Note\n\n这个反例说明原判断并不总成立。"
-  };
-
-  assert.equal(relationCreateDefaultTypeForNote(note), "counterexample_to");
-});
-
-test("relation guidance defaults to qualifies when note carries a boundary signal", () => {
+test("relation creation does not infer a specific type from note wording or metadata", () => {
+  const counterexample = { body: "# Note\n\n这个反例说明原判断并不总成立。" };
   const note = {
     body: "# Note\n\n这里需要说明适用条件。",
     boundaryOrCounterpoint: "只在样本足够大时成立。"
   };
+  const example = { body: "# Note\n\n例如，这条笔记提供了一个具体场景。" };
+  const withLink = { body: "# Note\n\n[[Linked Note]]" };
+  const withTag = { body: "# Note\n\n#主题" };
 
-  assert.equal(relationCreateDefaultTypeForNote(note), "qualifies");
+  assert.equal(relationCreateDefaultTypeForNote(counterexample), "associated_with");
+  assert.equal(relationCreateDefaultTypeForNote(note), "associated_with");
+  assert.equal(relationCreateDefaultTypeForNote(example), "associated_with");
+  assert.equal(relationCreateDefaultTypeForNote(withLink), "associated_with");
+  assert.equal(relationCreateDefaultTypeForNote(withTag), "associated_with");
+});
+
+test("relation guidance still explains a type after the user chooses it", () => {
   const guidance = relationTypeGuidance("qualifies");
   assert.match(guidance.rationalePlaceholder, /边界|条件|例外/);
   assert.match(guidance.questionPlaceholder, /条件/);
+  const exampleGuidance = relationTypeGuidance("example_of");
+  assert.match(exampleGuidance.rationalePlaceholder, /具体例子|例子/);
+  const topicGuidance = relationTypeGuidance("same_topic");
+  assert.match(topicGuidance.rationaleHint, /共享的是哪个主题|标签相同/);
 });
 
-test("relation guidance defaults to example_of when note body reads like an example", () => {
-  const note = {
-    body: "# Note\n\n例如，这条笔记提供了一个具体场景。"
-  };
-
-  assert.equal(relationCreateDefaultTypeForNote(note), "example_of");
-  const guidance = relationTypeGuidance("example_of");
-  assert.match(guidance.rationalePlaceholder, /具体例子|例子/);
-});
-
-test("relation guidance defaults to same_topic when note already contains links or tags", () => {
-  const withLink = {
-    body: "# Note\n\n[[Linked Note]]"
-  };
-  const withTag = {
-    body: "# Note\n\n#主题"
-  };
-
-  assert.equal(relationCreateDefaultTypeForNote(withLink), "same_topic");
-  assert.equal(relationCreateDefaultTypeForNote(withTag), "same_topic");
-  const guidance = relationTypeGuidance("same_topic");
-  assert.match(guidance.rationaleHint, /共享的是哪个主题|标签相同/);
-});
-
-test("relation guidance falls back to supports when no stronger signal exists", () => {
+test("relation guidance falls back to a neutral association when no stronger signal exists", () => {
   const note = {
     body: "# Note\n\nThis is a plain claim without stronger relation hints."
   };
 
-  assert.equal(relationCreateDefaultTypeForNote(note), "supports");
-  const guidance = relationTypeGuidance("supports");
-  assert.match(guidance.rationalePlaceholder, /因为/);
-  assert.match(guidance.questionPlaceholder, /新问题/);
+  assert.equal(relationCreateDefaultTypeForNote(note), "associated_with");
+  const guidance = relationTypeGuidance("associated_with");
+  assert.ok(guidance.rationalePlaceholder);
+  assert.ok(guidance.questionPlaceholder);
   assert.doesNotMatch(guidance.questionHint, /\$\{/);
   assert.match(guidance.questionHint, /最值得验证的疑问/);
 });

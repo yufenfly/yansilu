@@ -61,13 +61,14 @@ test("permanent relation workspace renders a large relation-only flow", () => {
   assert.match(html, />关联</);
   assert.match(html, /目标笔记/);
   assert.match(html, /已选择/);
-  assert.match(html, /它和这条笔记是什么关系？/);
-  assert.match(html, /支持它/);
-  assert.match(html, /不同意它/);
-  assert.match(html, /让我想到它/);
+  assert.match(html, /这条笔记对当前观点有什么影响？/);
+  assert.match(html, /支持这个观点/);
+  assert.match(html, /提出不同看法/);
+  assert.match(html, /补充适用条件/);
+  assert.match(html, /提供一个例子/);
   assert.match(html, /更多关系/);
-  assert.match(html, /为什么这么想？/);
-  assert.match(html, /placeholder="例如：这条笔记补充了前一条判断在什么条件下成立。"/);
+  assert.match(html, /为什么？/);
+  assert.match(html, /placeholder="用一句话说明它怎样影响了当前观点。"/);
   assert.match(html, />关联</);
   assert.doesNotMatch(html, /role="tablist"/);
   assert.doesNotMatch(html, /data-permanent-relation-target-preview-slot/);
@@ -108,7 +109,7 @@ test("permanent relation workspace blocks duplicate relation saves", () => {
   assert.equal(validation.reason, "existing_relation");
 });
 
-test("permanent relation workspace ignores wikilink-only relations when checking duplicates", () => {
+test("permanent relation workspace reuses a body wikilink relation instead of creating a duplicate", () => {
   const relations = {
     outgoingLinks: [
       {
@@ -129,9 +130,10 @@ test("permanent relation workspace ignores wikilink-only relations when checking
     rationale: "formal reason"
   };
 
-  assert.equal(permanentRelationWorkspaceExistingLink(relations, note.id, target.id), null);
+  assert.equal(permanentRelationWorkspaceExistingLink(relations, note.id, target.id)?.id, "wiki_1");
   const validation = permanentRelationWorkspaceCanSave({ state, relations });
-  assert.equal(validation.ok, true);
+  assert.equal(validation.ok, false);
+  assert.equal(validation.reason, "existing_relation");
 });
 
 test("permanent relation workspace keeps saved-relation counts out of the focused overlay", () => {
@@ -175,7 +177,7 @@ test("permanent relation workspace keeps saved-relation counts out of the focuse
   });
 
   assert.match(html, /目标笔记/);
-  assert.match(html, /为什么这么想？/);
+  assert.match(html, /为什么？/);
   assert.doesNotMatch(html, /permanent-relation-source-status/);
   assert.doesNotMatch(html, />1 条已保存关系</);
   assert.doesNotMatch(html, />3 条已保存关系</);
@@ -196,6 +198,7 @@ test("permanent relation workspace keeps non-writing relation types available", 
   });
 
   assert.match(html, /<option value="reframes" selected>/);
+  assert.match(html, /<details class="permanent-relation-more-types" open>/);
   assert.match(html, /<option value="restates"/);
   assert.doesNotMatch(html, /value="appears_in_draft"/);
 });

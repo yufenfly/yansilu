@@ -2,15 +2,13 @@ export function distillationQueueFilters(counts = {}) {
   return [
     ["all", "全部", counts.all || 0],
     ["needs_thesis", "待一句话判断", counts.needs_thesis || 0],
-    ["needs_summary", "待三句话压缩", counts.needs_summary || 0],
     ["needs_confirm", "待确认", counts.needs_confirm || 0],
     ["confirmed", "已确认", counts.confirmed || 0]
   ];
 }
 
 function distillationWritingReady(note = {}, status = "") {
-  const summary = Array.isArray(note.threeLineSummary) ? note.threeLineSummary.filter((item) => String(item || "").trim()) : [];
-  return status === "confirmed" && String(note.thesis || "").trim() && summary.length >= 3;
+  return status === "confirmed" && Boolean(String(note.thesis || "").trim());
 }
 
 export function buildDistillationPanelModel({ items = [], activeFilter = "all" } = {}) {
@@ -21,7 +19,7 @@ export function buildDistillationPanelModel({ items = [], activeFilter = "all" }
       acc[item.stage] = (acc[item.stage] || 0) + 1;
       return acc;
     },
-    { all: 0, needs_thesis: 0, needs_summary: 0, needs_confirm: 0, confirmed: 0 }
+    { all: 0, needs_thesis: 0, needs_confirm: 0, confirmed: 0 }
   );
   const counts = safeItems.reduce(
     (acc, item) => {
@@ -36,7 +34,6 @@ export function buildDistillationPanelModel({ items = [], activeFilter = "all" }
   const filteredItems = normalizedFilter === "all" ? safeItems : safeItems.filter((item) => item.stage === normalizedFilter);
   const gapChips = [
     stageCounts.needs_thesis ? `缺一句话判断 ${stageCounts.needs_thesis}` : "",
-    stageCounts.needs_summary ? `缺三句话压缩 ${stageCounts.needs_summary}` : "",
     stageCounts.needs_confirm ? `待确认观点 ${stageCounts.needs_confirm}` : ""
   ].filter(Boolean);
   const nextActiveItem = safeItems.find((item) => item.stage !== "confirmed") || null;

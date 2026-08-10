@@ -23,24 +23,24 @@ test("deriveNoteThinkingStatus maps permanent note distillation progress", () =>
       noteType: "permanent",
       thesis: "Writing starts from compressed claims."
     }).status,
-    "needs_three_line_summary"
+    "needs_confirmation"
   );
 
   assert.equal(
     deriveNoteThinkingStatus({
       noteType: "permanent",
       thesis: "Writing starts from compressed claims.",
-      threeLineSummary: ["Claim", "Reason", "Use"]
+      distillationStatus: "confirmed"
     }).status,
-    "needs_reason"
+    "needs_relation"
   );
 
   assert.equal(
     deriveNoteThinkingStatus({
       noteType: "permanent",
       thesis: "Writing starts from compressed claims.",
-      threeLineSummary: ["Claim", "Reason", "Use"],
-      boundaryOrCounterpoint: "This fails without source trace."
+      distillationStatus: "confirmed",
+      explicitRelationCount: 1
     }).status,
     "ready_for_index"
   );
