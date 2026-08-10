@@ -9,22 +9,23 @@ function noteIdSet(notes = []) {
 export const SMART_NOTES_DEMO_WALKTHROUGH_STEPS = [
   {
     key: "first-judgment",
-    title: "把记录说成自己的判断",
-    note: "先看一条材料怎样经过转述，变成可以长期复用的观点。",
+    title: "看看当前观点怎样形成",
+    note: "先看一条材料怎样经过转述，成为当前观点；再看最初的问题、改变原因和依据。",
     action: "open-demo-note",
-    targetNoteId: "PERM-PARAPHRASE-BEFORE-JUDGMENT",
+    targetNoteId: "PERM-PERMANENT-NOTE-IS-JUDGMENT",
     noteIds: [
       "GUIDE-SMART-NOTES-START",
       "SRC-SMART-NOTES",
       "FN-PHONE-CAPTURE-UNPROCESSED",
       "LN-PARAPHRASE-IS-FIRST-CHECK",
-      "PERM-PARAPHRASE-BEFORE-JUDGMENT"
+      "PERM-PARAPHRASE-BEFORE-JUDGMENT",
+      "PERM-PERMANENT-NOTE-IS-JUDGMENT"
     ]
   },
   {
     key: "first-relation",
-    title: "说明两条观点为什么有关",
-    note: "选择一条相关笔记，写一句它为什么支持、不同意或让你想到另一条。",
+    title: "把关系变成以后看得懂的线索",
+    note: "正文链接已经会进入网络；再选择一条笔记，写一句它怎样影响当前观点。",
     action: "open-demo-note-relations",
     targetNoteId: "PERM-UNLINKED-PRACTICE",
     noteIds: ["PERM-UNLINKED-PRACTICE"]
@@ -76,7 +77,7 @@ export function buildSmartNotesDemoWalkthrough({ notes = [], completedSteps = []
   return {
     kind: "smart-notes-demo",
     title: "从记录到写作",
-    note: finished ? "你已经看完第一条知识链：记录会变成判断，判断能通过关联进入写作。" : `下一步：${active.title}。${active.note}`,
+    note: finished ? "你已经看完第一条知识链：记录会形成当前观点，观点带着变化理由和关系进入写作。" : `下一步：${active.title}。${active.note}`,
     activeStepKey: active?.key || "",
     completedCount: completed.length,
     finished,

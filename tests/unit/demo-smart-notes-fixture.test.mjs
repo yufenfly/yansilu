@@ -216,10 +216,24 @@ test("writing project starts from theme indexes and key permanent notes", () => 
 test("guide note is beginner friendly and opens the complete workflow", () => {
   const guide = fixture.guide_notes.find((note) => note.id === "GUIDE-SMART-NOTES-START");
   assert.ok(guide, "missing starting guide");
-  assert.match(guide.body, /记录材料 -> 用自己的话转述 -> 形成一条判断 -> 写清关系理由 -> 组织主题 -> 查看提纲/);
+  assert.match(guide.body, /记录材料 -> 用自己的话转述 -> 保存当前观点 -> 看它为什么变化 -> 建立关系 -> 组织主题 -> 查看提纲/);
   assert.match(guide.body, /\[\[手机上先记一句/);
   assert.match(guide.body, /\[\[用自己的话重说，才能检查理解\]\]/);
   assert.match(guide.body, /\[\[关系理由练习：给已有笔记补一条说明\]\]/);
   assert.match(guide.body, /\[\[为什么要关联笔记？\]\]/);
   assert.doesNotMatch(guide.body, OLD_VISIBLE_ID_PATTERN);
+});
+
+test("demo includes a traceable viewpoint change with source notes", () => {
+  const note = fixture.permanent_notes.find((item) => item.id === "PERM-PERMANENT-NOTE-IS-JUDGMENT");
+
+  assert.ok(note, "missing viewpoint trace note");
+  assert.match(note.startingQuestion || "", /材料变成/);
+  assert.equal(note.viewpointHistory.length, 1);
+  assert.equal(note.viewpointHistory.at(-1)?.thesis, note.thesis);
+  assert.match(note.viewpointHistory[0].reason, /转述成自己的话/);
+  assert.deepEqual(note.viewpointHistory[0].sourceNoteIds, [
+    "PERM-PARAPHRASE-BEFORE-JUDGMENT",
+    "PERM-FLEETING-NOTE-IS-CAPTURE"
+  ]);
 });

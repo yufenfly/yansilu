@@ -3,7 +3,7 @@ const SOURCE_ID = "SRC-SMART-NOTES";
 const permanentDefinitions = [
   ["PERM-WRITING-STARTS-BEFORE-DRAFT", "写作不是最后一步，而是整理笔记的方向", "写作", "从记录开始就问它以后能回答什么问题，材料才不会只停在收藏夹。", "研思录把记录、关联、主题和写作连成一条路。", "不是每条记录都要写成文章；它只需要有清楚的下一步。", ["写作中心应该从已确认判断生成提纲", "主题索引不是文件夹，而是问题入口"]],
   ["PERM-PARAPHRASE-BEFORE-JUDGMENT", "文献笔记要先转述，再沉淀判断", "文献笔记", "先用自己的话重说材料，才能看见自己是否真的理解。", "文献笔记把摘录、转述和候选永久笔记分开。", "转述可以保留疑问，不必急着得出结论。", ["摘录不等于理解", "永久笔记是一条用户愿意承担的判断"]],
-  ["PERM-PERMANENT-NOTE-IS-JUDGMENT", "永久笔记是一条用户愿意承担的判断", "永久笔记", "永久笔记不是摘要，而是一条离开原材料也能继续使用的判断。", "判断可以被支持、反驳、限定，并进入主题和写作。", "判断可以很小，也可以带条件；清楚比宏大重要。", ["边界和反例让永久笔记更可靠", "永久笔记标题应该像一句判断"]],
+  ["PERM-PERMANENT-NOTE-IS-JUDGMENT", "永久笔记是一条用户愿意承担的判断", "永久笔记", "永久笔记是一条用户愿意承担、离开原材料也能继续使用的判断。", "判断可以被支持、反驳、限定，并进入主题和写作。", "判断可以很小，也可以带条件；清楚比宏大重要。", ["边界和反例让永久笔记更可靠", "永久笔记标题应该像一句判断"]],
   ["PERM-RELATION-REASON-MATTERS", "关系理由比连线本身更重要", "关联", "写清两条笔记为什么相关，连接才会留下可复用的思考。", "关联时选择关系类型，并写一句人能读懂的理由。", "说不清理由时先不保存，比制造一条空连接更好。", ["关系类型是在告诉未来自己怎么读这两条笔记", "关联理由是在替未来文章预写一小段"]],
   ["PERM-THEME-INDEX-IS-ENTRY", "主题索引不是文件夹，而是问题入口", "主题", "主题索引围绕一个问题组织关键笔记，让用户下次能继续思考。", "主题索引显示中心问题、关键笔记和进入写作的入口。", "三到七条关键笔记就能先建立主题，不必等资料齐全。", ["主题索引应该从一个中心问题开始", "主题索引是会继续生长的文章前身"]],
   ["PERM-COMPOUND-INTEREST-FROM-REUSE", "知识网络的复利来自旧笔记遇到新问题", "关联", "旧判断在新主题和新文章中被再次使用，才会产生知识复利。", "图谱和主题索引帮助旧笔记重新出现。", "复用要有理由，不能为了数量硬把笔记塞进主题。", ["关系类型会改变以后发现新东西的方式", "主题索引要保存一条可读顺序"]],
@@ -104,6 +104,24 @@ const RELATION_AND_REUSE_IDS = new Set([
   "PERM-UNLINKED-PRACTICE"
 ]);
 
+const VIEWPOINT_TRACE_BY_ID = new Map([
+  [
+    "PERM-PERMANENT-NOTE-IS-JUDGMENT",
+    {
+      startingQuestion: "怎样把读到的材料变成以后还能继续使用的判断？",
+      viewpointHistory: [
+        {
+          previousThesis: "永久笔记是把材料压短后的摘要。",
+          thesis: "永久笔记是一条用户愿意承担、离开原材料也能继续使用的判断。",
+          reason: "把材料转述成自己的话后，才发现真正要留下的是可以被检验和继续使用的判断，不是更短的摘录。",
+          changedAt: "2026-06-01T09:30:00.000Z",
+          sourceNoteIds: ["PERM-PARAPHRASE-BEFORE-JUDGMENT", "PERM-FLEETING-NOTE-IS-CAPTURE"]
+        }
+      ]
+    }
+  ]
+]);
+
 function demoClusterFor(id) {
   if (MATERIAL_TO_JUDGMENT_IDS.has(id)) return "材料到判断";
   if (RELATION_AND_REUSE_IDS.has(id)) return "关系与复利";
@@ -153,6 +171,7 @@ const indexDefinitions = [
 function permanentNote([id, title, cluster, thesis, product, boundary, links]) {
   const related = links.filter((item) => CORE_PERMANENT_TITLES.has(item)).map((item) => `- [[${item}]]`).join("\n");
   const demoCluster = demoClusterFor(id);
+  const viewpointTrace = VIEWPOINT_TRACE_BY_ID.get(id) || {};
   return {
     id,
     note_type: "permanent",
@@ -162,6 +181,8 @@ function permanentNote([id, title, cluster, thesis, product, boundary, links]) {
     status: "active",
     distillation_status: "confirmed",
     thesis,
+    startingQuestion: viewpointTrace.startingQuestion || "",
+    viewpointHistory: viewpointTrace.viewpointHistory || [],
     threeLineSummary: [thesis, product, boundary],
     productImplication: product,
     boundaryOrCounterpoint: boundary,
@@ -286,7 +307,9 @@ const relationSeeds = [
   ["TOPIC-BRIDGE", "PERM-BRIDGE-RELATION-FINDS-NEW-THEME", "PERM-THEME-INDEX-IS-ENTRY", "bridges", "桥接笔记产生的新问题可以进入主题索引。"],
   ["AI-BOUNDARY", "PERM-AI-SUGGESTION-IS-CANDIDATE", "PERM-WRITING-CENTER-FROM-CONFIRMED-NOTES", "qualifies", "AI 只能补充候选，限定了提纲必须从用户确认内容出发。"],
   ["ONBOARDING-PRACTICE", "PERM-FIRST-TEN-MINUTES", "PERM-UNLINKED-PRACTICE", "example_of", "十分钟路径把首次上手落到一次真实的关联练习上。"],
-  ["SAME-TOPIC", "PERM-INDEX-CARD-STARTS-WITH-CENTRAL-QUESTION", "PERM-INDEX-CARD-KEEPS-READING-ORDER", "same_topic", "两条笔记共同回答主题索引应该怎样组织关键笔记。"]
+  ["SAME-TOPIC", "PERM-INDEX-CARD-STARTS-WITH-CENTRAL-QUESTION", "PERM-INDEX-CARD-KEEPS-READING-ORDER", "same_topic", "两条笔记共同回答主题索引应该怎样组织关键笔记。"],
+  ["CAPTURE-TO-PARAPHRASE", "PERM-FLEETING-NOTE-IS-CAPTURE", "PERM-PARAPHRASE-BEFORE-JUDGMENT", "precedes", "随笔先保存现场想法，再通过转述检查理解，才会形成可以长期使用的当前观点。"],
+  ["PARAPHRASE-TO-JUDGMENT", "PERM-PARAPHRASE-BEFORE-JUDGMENT", "PERM-PERMANENT-NOTE-IS-JUDGMENT", "supports", "用自己的话转述材料，支撑这条观点不只是原文摘要，而是用户愿意承担的判断。"]
 ];
 
 // Keep the original fixture relation ids so importing the refreshed Demo updates
@@ -468,13 +491,13 @@ function scaffold(project, id) {
 
 function guideNotes() {
   return [
-    ["GUIDE-SMART-NOTES-START", "00 从这里开始：3 分钟看懂一条知识链", `你不用先学术语，只看一条链：记录材料 -> 用自己的话转述 -> 形成一条判断 -> 写清关系理由 -> 组织主题 -> 查看提纲。\n\n1. 看 [[手机上先记一句：我总是收藏很多但不会用]]。\n2. 看 [[用自己的话重说，才能检查理解]]，再看 [[永久笔记要能脱离原文使用]]。\n3. 打开 [[关系理由练习：给已有笔记补一条说明]]，选择一种关系并写一句理由。\n4. 打开 [[为什么要关联笔记？]]，再进入示例写作项目查看提纲。\n\n先跟着做一遍；不必一次理解全部功能。`],
-    ["GUIDE-TODAY-NEXT-STEP", "01 今天先做哪一步？", "先处理一条材料。写成自己的判断后，再补一条有理由的关系。"],
-    ["GUIDE-WHAT-PERMANENT", "02 什么是永久笔记？", "永久笔记是一条你愿意承担的判断。标题说观点，正文写理由和边界。\n\n继续看：[[永久笔记是一条用户愿意承担的判断]]。"],
-    ["GUIDE-WHY-RELATE", "03 为什么要建立关系？", "关联让两条判断互相解释。选择对象、关系类型，写一句为什么相关，然后保存。\n\n继续看：[[关系理由比连线本身更重要]]。"],
+    ["GUIDE-SMART-NOTES-START", "00 从这里开始：3 分钟看懂观点怎样形成", `你不用先学术语，只看一条链：记录材料 -> 用自己的话转述 -> 保存当前观点 -> 看它为什么变化 -> 建立关系 -> 组织主题 -> 查看提纲。\n\n1. 看 [[手机上先记一句：我总是收藏很多但不会用]]。\n2. 看 [[用自己的话重说，才能检查理解]]，再打开 [[永久笔记是一条用户愿意承担的判断]]，切到“怎么形成的”看最初问题、改变原因和依据。\n3. 打开 [[关系理由练习：给已有笔记补一条说明]]，搜索一条笔记，选择它带来的影响并写一句理由。\n4. 打开 [[为什么要关联笔记？]]，再进入示例写作项目查看提纲。\n\n先跟着做一遍；不必一次理解全部功能。`],
+    ["GUIDE-TODAY-NEXT-STEP", "01 今天先做哪一步？", "先处理一条材料。用自己的话写下并保存当前观点；有新证据改变想法时，再补一句为什么改变。"],
+    ["GUIDE-WHAT-PERMANENT", "02 什么是永久笔记？", "永久笔记是一条你愿意承担的当前观点。需要时可以写最初的问题、补充说明和边界；观点改变时，保留原因和影响它的笔记。\n\n继续看：[[永久笔记是一条用户愿意承担的判断]]。"],
+    ["GUIDE-WHY-RELATE", "03 为什么要建立关系？", "正文中自动生成的链接和手动保存的关联都会进入知识网络。需要时补一句理由，让未来的你看懂它是支持、反例、条件还是例子。\n\n继续看：[[关系理由比连线本身更重要]]。"],
     ["GUIDE-WRITABLE-THEME", "04 什么是可写主题？", "当几条永久笔记能一起回答一个问题时，就可以整理成主题索引。\n\n继续看：[[主题索引不是文件夹，而是问题入口]]。"],
     ["GUIDE-INDEX-TO-WRITING", "05 怎么从主题进入写作中心？", "打开主题，确认中心问题和关键笔记，再进入写作中心生成提纲。提纲可修改，不会自动写成文章。"],
-    ["GUIDE-RELATION-TYPES", "06 关系怎么选？", "先选“支持它”“不同意它”或“让我想到它”，再写一句为什么。更细的关系以后需要时再用。"]
+    ["GUIDE-RELATION-TYPES", "06 关系怎么选？", "先选“只是有关”“支持这个观点”“提出不同看法”“补充适用条件”或“提供一个例子”，再写一句为什么。暂时说不清时，先保留正文链接也可以。"]
   ].map(([id, title, content]) => ({ id, note_type: "guide", title, status: "active", tags: ["导览", "Smart Notes Demo"], body: `# ${title}\n\n${content}` }));
 }
 

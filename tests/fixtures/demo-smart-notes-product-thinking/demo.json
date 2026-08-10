@@ -191,6 +191,8 @@
       "status": "active",
       "distillation_status": "confirmed",
       "thesis": "从记录开始就问它以后能回答什么问题，材料才不会只停在收藏夹。",
+      "startingQuestion": "",
+      "viewpointHistory": [],
       "threeLineSummary": [
         "从记录开始就问它以后能回答什么问题，材料才不会只停在收藏夹。",
         "研思录把记录、关联、主题和写作连成一条路。",
@@ -232,6 +234,8 @@
       "status": "active",
       "distillation_status": "confirmed",
       "thesis": "先用自己的话重说材料，才能看见自己是否真的理解。",
+      "startingQuestion": "",
+      "viewpointHistory": [],
       "threeLineSummary": [
         "先用自己的话重说材料，才能看见自己是否真的理解。",
         "文献笔记把摘录、转述和候选永久笔记分开。",
@@ -272,9 +276,22 @@
       "cluster_label": "材料到判断",
       "status": "active",
       "distillation_status": "confirmed",
-      "thesis": "永久笔记不是摘要，而是一条离开原材料也能继续使用的判断。",
+      "thesis": "永久笔记是一条用户愿意承担、离开原材料也能继续使用的判断。",
+      "startingQuestion": "怎样把读到的材料变成以后还能继续使用的判断？",
+      "viewpointHistory": [
+        {
+          "previousThesis": "永久笔记是把材料压短后的摘要。",
+          "thesis": "永久笔记是一条用户愿意承担、离开原材料也能继续使用的判断。",
+          "reason": "把材料转述成自己的话后，才发现真正要留下的是可以被检验和继续使用的判断，不是更短的摘录。",
+          "changedAt": "2026-06-01T09:30:00.000Z",
+          "sourceNoteIds": [
+            "PERM-PARAPHRASE-BEFORE-JUDGMENT",
+            "PERM-FLEETING-NOTE-IS-CAPTURE"
+          ]
+        }
+      ],
       "threeLineSummary": [
-        "永久笔记不是摘要，而是一条离开原材料也能继续使用的判断。",
+        "永久笔记是一条用户愿意承担、离开原材料也能继续使用的判断。",
         "判断可以被支持、反驳、限定，并进入主题和写作。",
         "判断可以很小，也可以带条件；清楚比宏大重要。"
       ],
@@ -286,8 +303,8 @@
         "材料到判断",
         "Smart Notes Demo"
       ],
-      "body": "# 永久笔记是一条用户愿意承担的判断\n\n## 核心判断\n永久笔记不是摘要，而是一条离开原材料也能继续使用的判断。\n\n## 为什么\n判断可以被支持、反驳、限定，并进入主题和写作。\n\n## 边界\n判断可以很小，也可以带条件；清楚比宏大重要。\n\n## 继续看\n- [[边界和反例让永久笔记更可靠]]",
-      "core_claim": "永久笔记不是摘要，而是一条离开原材料也能继续使用的判断。",
+      "body": "# 永久笔记是一条用户愿意承担的判断\n\n## 核心判断\n永久笔记是一条用户愿意承担、离开原材料也能继续使用的判断。\n\n## 为什么\n判断可以被支持、反驳、限定，并进入主题和写作。\n\n## 边界\n判断可以很小，也可以带条件；清楚比宏大重要。\n\n## 继续看\n- [[边界和反例让永久笔记更可靠]]",
+      "core_claim": "永久笔记是一条用户愿意承担、离开原材料也能继续使用的判断。",
       "rationale": "判断可以被支持、反驳、限定，并进入主题和写作。",
       "template": {
         "type": "permanent_note",
@@ -314,6 +331,8 @@
       "status": "active",
       "distillation_status": "confirmed",
       "thesis": "写清两条笔记为什么相关，连接才会留下可复用的思考。",
+      "startingQuestion": "",
+      "viewpointHistory": [],
       "threeLineSummary": [
         "写清两条笔记为什么相关，连接才会留下可复用的思考。",
         "关联时选择关系类型，并写一句人能读懂的理由。",
@@ -355,6 +374,8 @@
       "status": "active",
       "distillation_status": "confirmed",
       "thesis": "主题索引围绕一个问题组织关键笔记，让用户下次能继续思考。",
+      "startingQuestion": "",
+      "viewpointHistory": [],
       "threeLineSummary": [
         "主题索引围绕一个问题组织关键笔记，让用户下次能继续思考。",
         "主题索引显示中心问题、关键笔记和进入写作的入口。",
@@ -396,6 +417,8 @@
       "status": "active",
       "distillation_status": "confirmed",
       "thesis": "旧判断在新主题和新文章中被再次使用，才会产生知识复利。",
+      "startingQuestion": "",
+      "viewpointHistory": [],
       "threeLineSummary": [
         "旧判断在新主题和新文章中被再次使用，才会产生知识复利。",
         "图谱和主题索引帮助旧笔记重新出现。",
@@ -437,6 +460,8 @@
       "status": "active",
       "distillation_status": "confirmed",
       "thesis": "随笔先留下现场想法，之后还要判断、转成永久笔记或删除。",
+      "startingQuestion": "",
+      "viewpointHistory": [],
       "threeLineSummary": [
         "随笔先留下现场想法，之后还要判断、转成永久笔记或删除。",
         "首页优先接住未处理随笔。",
@@ -478,6 +503,8 @@
       "status": "active",
       "distillation_status": "confirmed",
       "thesis": "写作从用户已经确认的主题和关键笔记开始，而不是从空白提示词开始。",
+      "startingQuestion": "",
+      "viewpointHistory": [],
       "threeLineSummary": [
         "写作从用户已经确认的主题和关键笔记开始，而不是从空白提示词开始。",
         "选择主题和相关笔记后生成提纲，再进入草稿。",
@@ -519,6 +546,8 @@
       "status": "active",
       "distillation_status": "confirmed",
       "thesis": "说明判断在什么条件下不成立，会让笔记更可信。",
+      "startingQuestion": "",
+      "viewpointHistory": [],
       "threeLineSummary": [
         "说明判断在什么条件下不成立，会让笔记更可信。",
         "永久笔记保留边界，写作检查也会提醒过度结论。",
@@ -560,6 +589,8 @@
       "status": "active",
       "distillation_status": "confirmed",
       "thesis": "正文链接和人工关系都能让笔记进入知识网络；真正值得补的是一条可读的关系理由。",
+      "startingQuestion": "",
+      "viewpointHistory": [],
       "threeLineSummary": [
         "正文链接和人工关系都能让笔记进入知识网络；真正值得补的是一条可读的关系理由。",
         "先看这条笔记已有的正文链接和人工关系；再在 Demo 中搜索一条新笔记，选择关系类型并写清为什么相关。",
@@ -601,6 +632,8 @@
       "status": "active",
       "distillation_status": "confirmed",
       "thesis": "支持关系回答一个判断为什么站得住。",
+      "startingQuestion": "",
+      "viewpointHistory": [],
       "threeLineSummary": [
         "支持关系回答一个判断为什么站得住。",
         "写作中心可把支持关系带入论据位置。",
@@ -642,6 +675,8 @@
       "status": "active",
       "distillation_status": "confirmed",
       "thesis": "面对反方，用户必须说明自己的判断在哪些条件下成立。",
+      "startingQuestion": "",
+      "viewpointHistory": [],
       "threeLineSummary": [
         "面对反方，用户必须说明自己的判断在哪些条件下成立。",
         "图谱可帮助发现相互冲突的笔记。",
@@ -683,6 +718,8 @@
       "status": "active",
       "distillation_status": "confirmed",
       "thesis": "主题索引加入关键笔记和顺序后，已经具备文章提纲的雏形。",
+      "startingQuestion": "",
+      "viewpointHistory": [],
       "threeLineSummary": [
         "主题索引加入关键笔记和顺序后，已经具备文章提纲的雏形。",
         "可从主题直接进入写作中心。",
@@ -724,6 +761,8 @@
       "status": "active",
       "distillation_status": "confirmed",
       "thesis": "只有观点的提纲容易变成口号，加入证据、反方和边界才完整。",
+      "startingQuestion": "",
+      "viewpointHistory": [],
       "threeLineSummary": [
         "只有观点的提纲容易变成口号，加入证据、反方和边界才完整。",
         "生成提纲后先检查缺口，再决定是否开始草稿。",
@@ -1023,6 +1062,30 @@
       "confidence": 1
     },
     {
+      "id": "REL-DEMO-V3-52-CAPTURE-TO-PARAPHRASE",
+      "from": "PERM-FLEETING-NOTE-IS-CAPTURE",
+      "to": "PERM-PARAPHRASE-BEFORE-JUDGMENT",
+      "relationType": "precedes",
+      "status": "confirmed",
+      "rationale": "随笔先保存现场想法，再通过转述检查理解，才会形成可以长期使用的当前观点。",
+      "source": "manual",
+      "relationSource": "manual",
+      "insight_question": "这条关系在以后思考或写作时，可以作为证据、反方、边界、例子还是过渡？",
+      "confidence": 1
+    },
+    {
+      "id": "REL-DEMO-V3-53-PARAPHRASE-TO-JUDGMENT",
+      "from": "PERM-PARAPHRASE-BEFORE-JUDGMENT",
+      "to": "PERM-PERMANENT-NOTE-IS-JUDGMENT",
+      "relationType": "supports",
+      "status": "confirmed",
+      "rationale": "用自己的话转述材料，支撑这条观点不只是原文摘要，而是用户愿意承担的判断。",
+      "source": "manual",
+      "relationSource": "manual",
+      "insight_question": "这条关系在以后思考或写作时，可以作为证据、反方、边界、例子还是过渡？",
+      "confidence": 1
+    },
+    {
       "id": "REL-DEMO-BODY-PERM-WRITING-STARTS-BEFORE-DRAFT-PERM-WRITING-CENTER-FROM-CONFIRMED-NOTES",
       "from": "PERM-WRITING-STARTS-BEFORE-DRAFT",
       "to": "PERM-WRITING-CENTER-FROM-CONFIRMED-NOTES",
@@ -1038,18 +1101,6 @@
       "id": "REL-DEMO-BODY-PERM-WRITING-STARTS-BEFORE-DRAFT-PERM-THEME-INDEX-IS-ENTRY",
       "from": "PERM-WRITING-STARTS-BEFORE-DRAFT",
       "to": "PERM-THEME-INDEX-IS-ENTRY",
-      "relationType": "associated_with",
-      "status": "confirmed",
-      "rationale": "markdown_wikilink",
-      "source": "body_wikilink",
-      "relationSource": "body_wikilink",
-      "insight_question": "正文里出现了这个链接。后续如果它支撑写作，再补一句清楚的关联理由。",
-      "confidence": 0.55
-    },
-    {
-      "id": "REL-DEMO-BODY-PERM-PARAPHRASE-BEFORE-JUDGMENT-PERM-PERMANENT-NOTE-IS-JUDGMENT",
-      "from": "PERM-PARAPHRASE-BEFORE-JUDGMENT",
-      "to": "PERM-PERMANENT-NOTE-IS-JUDGMENT",
       "relationType": "associated_with",
       "status": "confirmed",
       "rationale": "markdown_wikilink",
@@ -1086,6 +1137,18 @@
       "id": "REL-DEMO-BODY-PERM-SUPPORT-RELATION-BECOMES-EVIDENCE-PERM-OUTLINE-NEEDS-EVIDENCE-COUNTERPOINT-BOUNDARY",
       "from": "PERM-SUPPORT-RELATION-BECOMES-EVIDENCE",
       "to": "PERM-OUTLINE-NEEDS-EVIDENCE-COUNTERPOINT-BOUNDARY",
+      "relationType": "associated_with",
+      "status": "confirmed",
+      "rationale": "markdown_wikilink",
+      "source": "body_wikilink",
+      "relationSource": "body_wikilink",
+      "insight_question": "正文里出现了这个链接。后续如果它支撑写作，再补一句清楚的关联理由。",
+      "confidence": 0.55
+    },
+    {
+      "id": "REL-DEMO-BODY-GUIDE-SMART-NOTES-START-PERM-PERMANENT-NOTE-IS-JUDGMENT",
+      "from": "GUIDE-SMART-NOTES-START",
+      "to": "PERM-PERMANENT-NOTE-IS-JUDGMENT",
       "relationType": "associated_with",
       "status": "confirmed",
       "rationale": "markdown_wikilink",
@@ -1424,13 +1487,13 @@
     {
       "id": "GUIDE-SMART-NOTES-START",
       "note_type": "guide",
-      "title": "00 从这里开始：3 分钟看懂一条知识链",
+      "title": "00 从这里开始：3 分钟看懂观点怎样形成",
       "status": "active",
       "tags": [
         "导览",
         "Smart Notes Demo"
       ],
-      "body": "# 00 从这里开始：3 分钟看懂一条知识链\n\n你不用先学术语，只看一条链：记录材料 -> 用自己的话转述 -> 形成一条判断 -> 写清关系理由 -> 组织主题 -> 查看提纲。\n\n1. 看 [[手机上先记一句：我总是收藏很多但不会用]]。\n2. 看 [[用自己的话重说，才能检查理解]]，再看 [[永久笔记要能脱离原文使用]]。\n3. 打开 [[关系理由练习：给已有笔记补一条说明]]，选择一种关系并写一句理由。\n4. 打开 [[为什么要关联笔记？]]，再进入示例写作项目查看提纲。\n\n先跟着做一遍；不必一次理解全部功能。"
+      "body": "# 00 从这里开始：3 分钟看懂观点怎样形成\n\n你不用先学术语，只看一条链：记录材料 -> 用自己的话转述 -> 保存当前观点 -> 看它为什么变化 -> 建立关系 -> 组织主题 -> 查看提纲。\n\n1. 看 [[手机上先记一句：我总是收藏很多但不会用]]。\n2. 看 [[用自己的话重说，才能检查理解]]，再打开 [[永久笔记是一条用户愿意承担的判断]]，切到“怎么形成的”看最初问题、改变原因和依据。\n3. 打开 [[关系理由练习：给已有笔记补一条说明]]，搜索一条笔记，选择它带来的影响并写一句理由。\n4. 打开 [[为什么要关联笔记？]]，再进入示例写作项目查看提纲。\n\n先跟着做一遍；不必一次理解全部功能。"
     },
     {
       "id": "GUIDE-TODAY-NEXT-STEP",
@@ -1441,7 +1504,7 @@
         "导览",
         "Smart Notes Demo"
       ],
-      "body": "# 01 今天先做哪一步？\n\n先处理一条材料。写成自己的判断后，再补一条有理由的关系。\n\n继续：[[PERM-FLEETING-NOTE-IS-CAPTURE|继续阅读]]"
+      "body": "# 01 今天先做哪一步？\n\n先处理一条材料。用自己的话写下并保存当前观点；有新证据改变想法时，再补一句为什么改变。\n\n继续：[[PERM-FLEETING-NOTE-IS-CAPTURE|继续阅读]]"
     },
     {
       "id": "GUIDE-WHAT-PERMANENT",
@@ -1452,7 +1515,7 @@
         "导览",
         "Smart Notes Demo"
       ],
-      "body": "# 02 什么是永久笔记？\n\n永久笔记是一条你愿意承担的判断。标题说观点，正文写理由和边界。\n\n继续看：[[永久笔记是一条用户愿意承担的判断]]。"
+      "body": "# 02 什么是永久笔记？\n\n永久笔记是一条你愿意承担的当前观点。需要时可以写最初的问题、补充说明和边界；观点改变时，保留原因和影响它的笔记。\n\n继续看：[[永久笔记是一条用户愿意承担的判断]]。"
     },
     {
       "id": "GUIDE-WHY-RELATE",
@@ -1463,7 +1526,7 @@
         "导览",
         "Smart Notes Demo"
       ],
-      "body": "# 03 为什么要建立关系？\n\n关联让两条判断互相解释。选择对象、关系类型，写一句为什么相关，然后保存。\n\n继续看：[[关系理由比连线本身更重要]]。"
+      "body": "# 03 为什么要建立关系？\n\n正文中自动生成的链接和手动保存的关联都会进入知识网络。需要时补一句理由，让未来的你看懂它是支持、反例、条件还是例子。\n\n继续看：[[关系理由比连线本身更重要]]。"
     },
     {
       "id": "GUIDE-WRITABLE-THEME",
@@ -1496,7 +1559,7 @@
         "导览",
         "Smart Notes Demo"
       ],
-      "body": "# 06 关系怎么选？\n\n先选“支持它”“不同意它”或“让我想到它”，再写一句为什么。更细的关系以后需要时再用。\n\n继续：[[PERM-RELATION-REASON-MATTERS|继续阅读]]"
+      "body": "# 06 关系怎么选？\n\n先选“只是有关”“支持这个观点”“提出不同看法”“补充适用条件”或“提供一个例子”，再写一句为什么。暂时说不清时，先保留正文链接也可以。\n\n继续：[[PERM-RELATION-REASON-MATTERS|继续阅读]]"
     }
   ],
   "counts": {
@@ -1505,7 +1568,7 @@
     "literature_notes": 4,
     "permanent_notes": 14,
     "index_cards": 3,
-    "relations": 26,
+    "relations": 28,
     "writing_projects": 1,
     "draft_scaffolds": 1,
     "final_essays": 1,

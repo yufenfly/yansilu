@@ -184,7 +184,7 @@ function richNoteBodyFromFixture(note, fixtureType) {
         ]
       : ["- 待提取"]),
     "",
-    "## 三句话压缩",
+    "## 补充说明（可选）",
     ...(summary.length ? summary.map((item) => `- ${item}`) : ["- 待补充"]),
     "",
     "## 论证理由",
@@ -328,6 +328,10 @@ async function upsertNote(vaultPath, note, counters) {
   if (fixtureType === "permanent") {
     payload.thesis = cleanText(note?.thesis);
     payload.threeLineSummary = note?.threeLineSummary || note?.three_line_summary || [];
+    payload.startingQuestion = cleanText(note?.startingQuestion || note?.starting_question);
+    payload.viewpointHistory = Array.isArray(note?.viewpointHistory || note?.viewpoint_history)
+      ? note?.viewpointHistory || note?.viewpoint_history
+      : [];
     payload.distillationStatus = cleanText(note?.distillation_status || note?.distillationStatus) || "draft";
     payload.originalityStatus = cleanText(note?.originality_status || note?.originalityStatus) || "pass";
     payload.authorship = note?.authorship || { user_confirmed: true, ai_assisted: false };

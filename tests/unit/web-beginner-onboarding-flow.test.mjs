@@ -31,7 +31,7 @@ test("beginner flow detects Smart Notes demo and renders one focused next step",
   assert.match(html, /从记录到写作/);
   assert.match(html, /sidebar-flow-current/);
   assert.match(html, /第 2 \/ 3 步/);
-  assert.match(html, /说明两条观点为什么有关/);
+  assert.match(html, /把关系变成以后看得懂的线索/);
   assert.match(html, /打开并关联/);
   assert.doesNotMatch(html, /打开“为什么要关联笔记？”/);
   assert.match(html, /data-sidebar-flow-action="open-demo-note-relations"/);
@@ -48,10 +48,10 @@ test("beginner demo walkthrough keeps note title separate from the action button
   const html = renderSmartNotesDemoWalkthrough(flow);
 
   assert.equal(smartNotesDemoActionLabel(flow.steps[0], 0), "打开第 1 步笔记");
-  assert.match(html, /把记录说成自己的判断/);
+  assert.match(html, /看看当前观点怎样形成/);
   assert.match(html, /打开第 1 步笔记/);
   assert.doesNotMatch(html, /打开“写作不是最后一步”/);
-  assert.match(html, /data-sidebar-flow-note-id="PERM-PARAPHRASE-BEFORE-JUDGMENT"/);
+  assert.match(html, /data-sidebar-flow-note-id="PERM-PERMANENT-NOTE-IS-JUDGMENT"/);
 });
 
 test("beginner demo walkthrough advances only after explicit completed actions", () => {
