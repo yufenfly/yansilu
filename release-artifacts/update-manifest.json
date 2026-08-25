@@ -1,47 +1,30 @@
 {
   "version": "0.1.1-beta.1",
-  "releaseDate": "2026-07-16T08:03:41.311Z",
+  "releaseDate": "2026-07-25T04:05:40.877Z",
   "channel": "beta",
   "changelog": [
-    "Yansilu v0.1.1-beta.1 is a Windows desktop beta for close testers who want to try the core card-note writing workflow end to end.",
-    "At its core, Yansilu is built around one idea: record, restate, and connect, so notes can grow into original thinking.",
-    "Beginner-first empty vault entry with Demo import, Obsidian folder import, and first-note creation.",
-    "Smart Notes Demo that teaches the workflow through notes: source material, literature notes, permanent notes, relation reasons, theme indexes, writing center, and review, showing how notes can grow into original thinking.",
-    "Today organizing path for finding the next useful action: connect an unlinked permanent note, form a writable theme, or continue into writing.",
-    "Relation workflow for turning notes into a knowledge network with user-confirmed relation type and rationale.",
-    "Theme index and writable-theme suggestions that remain suggestions until the user confirms them.",
-    "Writing center flow from selected permanent notes to writable theme, outline, and draft.",
-    "Local AI setup guidance for Ollama-supported workflows, with AI suggestions kept review-first.",
-    "Paired mobile access for trusted LAN use: the computer shows the access entry and pairing code, the phone requests access, and the computer user must confirm before the phone can view or quickly capture notes.",
-    "Encrypted vault backup and restore flow for manually moving or preserving a complete local vault archive.",
-    "Desktop auto-update infrastructure and release manifest support, with update installation reserved for signed release artifacts.",
-    "Demo guide now opens at the beginning on mobile instead of landing near the lower product-feature section.",
-    "Empty-vault first launch now makes the confirmed \"导入示例库 / 体验 Demo\" path the single primary first action, without silently importing data or surfacing migration terminology on the beginner screen.",
-    "Mobile Demo walkthrough actions are more prominent, with larger step buttons and clearer active-step emphasis on small screens.",
-    "Mobile editor toolbar remains horizontally scrollable, so compact screens do not hide editing actions.",
-    "Repeat Demo import opens the existing guide with a beginner-friendly status instead of exposing technical database wording.",
-    "AI review and suggestion panels have stronger stale-selection safeguards.",
-    "Already processed AI inbox items no longer show actions that would fail.",
-    "External-link WYSIWYG browser smoke now uses the trusted click path and no longer waits on a long popup timeout.",
-    "Help now explains the computer-plus-phone workflow: keep the desktop app running, scan from the phone, confirm pairing on the computer, capture mobile notes into the desktop vault, and revoke paired devices when needed.",
-    "Writing center now exposes the draft-save action as soon as an outline or draft exists, so the visible next step is actually clickable.",
-    "Windows installer is unsigned and may trigger SmartScreen warnings.",
-    "This beta depends on the local API service at `http://localhost:3000`.",
-    "Updater artifacts are disabled for the local beta build; one-click update should wait for signed release feeds.",
-    "Native installed-WebView checks for file dialogs and OS shell reveal/open actions should be repeated before sharing beyond close testers.",
-    "Mobile access in this beta is intended for trusted LAN/private-network use, not direct public internet exposure.",
-    "A moderate DOMPurify advisory remains through `@toast-ui/editor`; the non-breaking dependency audit cleanup has removed high-severity findings, and the remaining fix path needs separate editor regression testing."
+    "Rebuilt Windows installer and refreshed macOS update signatures."
   ],
   "downloadUrl": "https://github.com/lidiansen58-debug/yansilu/releases/tag/v0.1.1-beta.1",
   "assets": [
     {
+      "file": "yansilu_0.1.1-beta.1_x64-setup.dmg",
+      "platform": "darwin-x86_64",
+      "bytes": 165603822,
+      "url": "https://github.com/lidiansen58-debug/yansilu/releases/download/v0.1.1-beta.1/yansilu_0.1.1-beta.1_x64-setup.dmg",
+      "checksum": {
+        "algorithm": "sha256",
+        "value": "F9D90FEA0839B3BE1AE984339A372FF01E23D289FE1549E8E9922929C209A306"
+      }
+    },
+    {
       "file": "yansilu_0.1.1-beta.1_x64-setup.exe",
       "platform": "windows-x86_64",
-      "bytes": 33102784,
+      "bytes": 33982243,
       "url": "https://github.com/lidiansen58-debug/yansilu/releases/download/v0.1.1-beta.1/yansilu_0.1.1-beta.1_x64-setup.exe",
       "checksum": {
         "algorithm": "sha256",
-        "value": "507CB6AA042544FC58B8FAEE27ABF98F49104235C9B1275A711F63372D46B50D"
+        "value": "B8DA0E607679AD0CDB6668C72354A2B19ADB22DAE5DF042E284F72835B2F7536"
       }
     }
   ],
@@ -49,6 +32,6 @@
   "critical": false,
   "checksum": {
     "algorithm": "sha256",
-    "value": "507CB6AA042544FC58B8FAEE27ABF98F49104235C9B1275A711F63372D46B50D"
+    "value": "B8DA0E607679AD0CDB6668C72354A2B19ADB22DAE5DF042E284F72835B2F7536"
   }
 }

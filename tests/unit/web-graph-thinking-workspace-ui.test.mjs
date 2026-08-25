@@ -2054,14 +2054,14 @@ test("graph demo startup resets presentation state for a stable first screen", (
   assert.equal(resetGraphDemoPresentationStateForRuntime(graphState, {
     setRelationTypeFilter: (...args) => relationFilterCalls.push(args)
   }), graphState);
-  assert.deepEqual(relationFilterCalls, [["meaningful", { persist: false }]]);
+  assert.deepEqual(relationFilterCalls, [["all", { persist: false }]]);
   assert.equal(graphState.readingLens, "insight");
   assert.equal(graphState.focusDepth, "1");
   assert.equal(graphState.selection, null);
   assert.equal(Object.prototype.hasOwnProperty.call(graphState, "legendOpen"), false);
   assert.equal(graphState.researchNavigatorHidden, true);
   assert.equal(graphState.researchNavigatorTouched, true);
-  assert.equal(graphState.zoom, "fit");
+  assert.equal(graphState.zoom, "detail");
   assert.equal(graphState.expanded, false);
   assert.equal(graphState.workbenchPanelOpen, false);
   assert.equal(graphState.workbenchPanelTab, "clues");

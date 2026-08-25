@@ -26,6 +26,8 @@ const DEFAULT_FIXTURE_PATH = path.join(REPO_ROOT, "tests", "fixtures", "demo-sma
 
 const ORIGINAL_DIRECTORY_ID = "dir_demo_smart_notes_product_thinking_original";
 const ORIGINAL_FOLDER_NAME = "demo-smart-notes-product-thinking";
+const GUIDE_DIRECTORY_ID = "dir_demo_smart_notes_product_thinking_guide";
+const GUIDE_FOLDER_NAME = "smart-notes-demo-guide";
 
 function cleanText(input) {
   return String(input || "").trim();
@@ -73,6 +75,7 @@ function fixtureNoteType(note) {
   if (kind === "source") return "source";
   if (kind === "fleeting") return "fleeting";
   if (kind === "literature") return "literature";
+  if (kind === "guide" || kind === "final_essay") return "guide";
   return "permanent";
 }
 
@@ -80,6 +83,7 @@ function directoryIdForFixtureType(fixtureType) {
   if (fixtureType === "source") return "dir_source_default";
   if (fixtureType === "fleeting") return "dir_fleeting_default";
   if (fixtureType === "literature") return "dir_literature_default";
+  if (fixtureType === "guide") return GUIDE_DIRECTORY_ID;
   return ORIGINAL_DIRECTORY_ID;
 }
 
@@ -180,7 +184,7 @@ function richNoteBodyFromFixture(note, fixtureType) {
         ]
       : ["- 待提取"]),
     "",
-    "## 三句话压缩",
+    "## 补充说明（可选）",
     ...(summary.length ? summary.map((item) => `- ${item}`) : ["- 待补充"]),
     "",
     "## 论证理由",
@@ -273,6 +277,20 @@ async function ensureOriginalDirectory(vaultPath) {
   });
 }
 
+async function ensureGuideDirectory(vaultPath) {
+  const root = path.resolve(vaultPath);
+  const directories = await listDirectories(root, { includeHidden: true });
+  const existing = directories.find((item) => item.id === GUIDE_DIRECTORY_ID);
+  if (existing) return existing;
+  return createDirectory(root, {
+    id: GUIDE_DIRECTORY_ID,
+    title: "Demo 导览",
+    directoryType: "custom",
+    fsPath: path.join(root, "notes", GUIDE_FOLDER_NAME),
+    maxNotes: 32
+  });
+}
+
 async function upsertSource(vaultPath, note, counters) {
   const payload = {
     id: cleanText(note?.id) || `src_${randomUUID().slice(0, 8)}`,
@@ -310,6 +328,10 @@ async function upsertNote(vaultPath, note, counters) {
   if (fixtureType === "permanent") {
     payload.thesis = cleanText(note?.thesis);
     payload.threeLineSummary = note?.threeLineSummary || note?.three_line_summary || [];
+    payload.startingQuestion = cleanText(note?.startingQuestion || note?.starting_question);
+    payload.viewpointHistory = Array.isArray(note?.viewpointHistory || note?.viewpoint_history)
+      ? note?.viewpointHistory || note?.viewpoint_history
+      : [];
     payload.distillationStatus = cleanText(note?.distillation_status || note?.distillationStatus) || "draft";
     payload.originalityStatus = cleanText(note?.originality_status || note?.originalityStatus) || "pass";
     payload.authorship = note?.authorship || { user_confirmed: true, ai_assisted: false };
@@ -466,6 +488,7 @@ export async function seedSmartNotesProductThinking(vaultPath, options = {}) {
   if (!vaultPath) throw new Error("vaultPath is required");
   await initVault(vaultPath);
   await ensureOriginalDirectory(vaultPath);
+  await ensureGuideDirectory(vaultPath);
 
   const { fixturePath, fixture } = await loadFixture(options.fixturePath);
   const counts = fixture?.counts && typeof fixture.counts === "object" ? fixture.counts : {};

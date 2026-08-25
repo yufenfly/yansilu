@@ -83,6 +83,25 @@ export function installTodayOrganizingEvents(panel = null, depsProvider = () => 
     event.preventDefault();
     const deps = depsProvider() || {};
 
+    if (action === "start-first-note") {
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+      try {
+        await deps.openStartupUntitledNote?.();
+        deps.activateModule?.("explorer");
+      } catch (error) {
+        deps.setStatus?.(`无法新建第一条记录：${String(error?.message || error)}`, "bad");
+      } finally {
+        button.disabled = false;
+        button.removeAttribute("aria-busy");
+      }
+      return;
+    }
+    if (action === "open-import") {
+      await deps.handleStateChange?.("open-import", { source: "today-empty-start" });
+      return;
+    }
+
     if (action === "seed-demo") {
       const originalText = button.textContent;
       const hint = panel.querySelector?.("[data-today-demo-status]");

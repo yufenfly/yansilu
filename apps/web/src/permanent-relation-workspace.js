@@ -30,11 +30,69 @@ function noteMeta(note = {}, deps = {}) {
 
 const PERMANENT_RELATION_WORKSPACE_TYPES = RELATION_CREATE_TYPES.filter((type) => type !== "appears_in_draft");
 
+const COMMON_RELATION_CHOICES = [
+  {
+    type: "associated_with",
+    title: "只是有关",
+    note: "先记下关联，之后再判断具体关系。"
+  },
+  {
+    type: "supports",
+    title: "支持这个观点",
+    note: "它增加了证据或理由。"
+  },
+  {
+    type: "contradicts",
+    title: "提出不同看法",
+    note: "它带来了反例或不同判断。"
+  },
+  {
+    type: "qualifies",
+    title: "补充适用条件",
+    note: "它说明这个观点何时成立。"
+  },
+  {
+    type: "example_of",
+    title: "提供一个例子",
+    note: "它让这个观点更具体。"
+  }
+];
+
 function relationWorkspaceTypeOptions(selected = "associated_with") {
   const active = cleanText(selected).toLowerCase() || "associated_with";
   return PERMANENT_RELATION_WORKSPACE_TYPES.map(
     (type) => `<option value="${escapeHtml(type)}"${type === active ? " selected" : ""}>${escapeHtml(relationTypeLabel(type))}</option>`
   ).join("");
+}
+
+function renderCommonRelationChoices(selected = "associated_with") {
+  const active = cleanText(selected).toLowerCase() || "associated_with";
+  const commonActive = COMMON_RELATION_CHOICES.some((choice) => choice.type === active);
+  return `
+    <section class="permanent-relation-type-choice" aria-label="选择关系">
+      <span>这条笔记对当前观点有什么影响？</span>
+      <div class="permanent-relation-type-choice-grid">
+        ${COMMON_RELATION_CHOICES.map((choice) => `
+          <button
+            class="permanent-relation-type-card${choice.type === active ? " is-active" : ""}"
+            type="button"
+            data-permanent-relation-type-choice="${escapeHtml(choice.type)}"
+            aria-pressed="${choice.type === active ? "true" : "false"}"
+          >
+            <strong>${escapeHtml(choice.title)}</strong>
+            <small>${escapeHtml(choice.note)}</small>
+          </button>
+        `).join("")}
+      </div>
+      <details class="permanent-relation-more-types"${commonActive ? "" : " open"}>
+        <summary>更多关系</summary>
+        <label>
+          <span>需要更具体时再选</span>
+          <select name="relationType" data-permanent-relation-field="relationType" required>${relationWorkspaceTypeOptions(active)}</select>
+        </label>
+      </details>
+    </section>
+  `;
 }
 
 function renderSelectedTargetSummary(target = null, deps = {}) {
@@ -222,7 +280,7 @@ export function renderPermanentRelationWorkspace({
                   </div>
                   <div class="permanent-relation-search">
                     <label>目标笔记</label>
-                    <input type="search" data-permanent-relation-target-search value="${escapeHtml(workspaceState.manualQuery)}" placeholder="${selectedTarget ? "已选择目标笔记" : "输入关键词，选择要关联的永久笔记"}" autocomplete="off" />
+                    <input type="search" data-permanent-relation-target-search value="${escapeHtml(workspaceState.manualQuery)}" placeholder="${selectedTarget ? "已选择目标笔记" : "输入关键词，选择要关联的永久笔记"}" autocomplete="off" ${selectedTarget ? "" : "autofocus"} />
                     <div class="permanent-relation-dropdown" data-permanent-relation-manual-results${selectedTarget || !hasManualQuery ? " hidden" : ""}>
                       ${
                         selectedTarget
@@ -237,13 +295,10 @@ export function renderPermanentRelationWorkspace({
                 </section>`
           }
           <form class="permanent-relation-confirm ${isEditingExisting ? "is-editing-existing" : ""}" data-permanent-relation-form ${showingAiTargets ? "hidden" : ""}>
+            ${renderCommonRelationChoices(relationTypeValue)}
             <label>
-              <span>关系</span>
-              <select name="relationType" data-permanent-relation-field="relationType" required>${relationWorkspaceTypeOptions(relationTypeValue)}</select>
-            </label>
-            <label>
-              <span>理由</span>
-              <textarea name="rationale" data-permanent-relation-field="rationale" required placeholder="为什么相关？">${escapeHtml(rationaleValue)}</textarea>
+              <span>为什么？</span>
+              <textarea name="rationale" data-permanent-relation-field="rationale" required placeholder="用一句话说明它怎样影响了当前观点。">${escapeHtml(rationaleValue)}</textarea>
             </label>
             <input type="hidden" name="insightQuestion" data-permanent-relation-field="insightQuestion" value="${escapeHtml(workspaceState.insightQuestion)}">
             ${workspaceState.error ? `<div class="semantic-relation-form-error">${escapeHtml(workspaceState.error)}</div>` : ""}

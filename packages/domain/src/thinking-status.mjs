@@ -30,17 +30,17 @@ export function deriveNoteThinkingStatus(note = {}) {
   }
 
   const thesis = cleanText(note.thesis);
-  const threeLineSummary = stringItems(note.threeLineSummary || note.three_line_summary);
-  const boundaryOrCounterpoint = cleanText(note.boundaryOrCounterpoint || note.boundary_or_counterpoint);
+  const distillationStatus = cleanText(note.distillationStatus || note.distillation_status).toLowerCase();
+  const explicitRelationCount = Number(note.explicitRelationCount ?? note.explicit_relation_count ?? 0) || 0;
 
   if (!thesis) {
     return status("needs_thesis", "待写论点", "写一句话看法", "thesis");
   }
-  if (threeLineSummary.length !== 3) {
-    return status("needs_three_line_summary", "待压缩", "补三句话说明", "three_line_summary");
+  if (distillationStatus !== "confirmed") {
+    return status("needs_confirmation", "待确认", "确认这是你的当前观点", "thesis");
   }
-  if (!boundaryOrCounterpoint) {
-    return status("needs_reason", "待补理由", "补一个理由或例外", "boundary_or_counterpoint");
+  if (explicitRelationCount < 1) {
+    return status("needs_relation", "待建立关系", "关联一条相关笔记", "relations");
   }
   return status("ready_for_index", "待加入主题", "加入索引卡", "related_index_ids", "ready");
 }

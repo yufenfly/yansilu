@@ -2246,17 +2246,10 @@ function noteDistillationPayload(note = {}, body = {}, options = {}) {
 
 function assertPermanentNoteReadyToConfirm(note = {}, body = {}) {
   const thesis = cleanText(body.thesis === undefined ? note.thesis : body.thesis);
-  const summary = body.threeLineSummary !== undefined || body.three_line_summary !== undefined
-    ? body.threeLineSummary ?? body.three_line_summary
-    : note.threeLineSummary || [];
-  const summaryItems = (Array.isArray(summary) ? summary : []).map((item) => cleanText(item)).filter(Boolean);
-  if (!thesis || summaryItems.length !== 3) {
-    const error = new Error("Confirming distillation requires a thesis and exactly three summary lines.");
+  if (!thesis) {
+    const error = new Error("Confirming a permanent note requires a current viewpoint.");
     error.code = "PERMANENT_DISTILLATION_CONFIRMATION_INCOMPLETE";
-    error.details = {
-      hasThesis: Boolean(thesis),
-      threeLineSummaryCount: summaryItems.length
-    };
+    error.details = { hasThesis: false };
     throw error;
   }
 }
@@ -4581,6 +4574,13 @@ const server = http.createServer(async (req, res) => {
             })
           );
         }
+        if (fieldSuggestion.field === "thesis" && cleanText(note.thesis) && cleanText(note.thesis) !== cleanText(fieldSuggestion.update.thesis)) {
+          fieldSuggestion.update.thesisChangeReason = cleanText(body.comment) || "采纳 AI 建议作为待确认草稿。";
+          fieldSuggestion.update.viewpointChangeSourceNoteIds = Array.isArray(existingArtifact.sources?.noteIds)
+            ? existingArtifact.sources.noteIds.filter((noteId) => cleanText(noteId) && cleanText(noteId) !== fieldSuggestion.noteId)
+            : [];
+          fieldSuggestion.update.viewpointChangeStatus = "draft";
+        }
         const suggestionId = fieldSuggestionIdFromArtifactPayload(existingArtifact);
         const suggestionStore = suggestionId ? await aiSuggestionStore() : null;
         const adoption = await adoptSuggestionAndLinkedArtifactAtomically({
@@ -5498,6 +5498,11 @@ const server = http.createServer(async (req, res) => {
           status: body.status || "draft",
           thesis: body.thesis,
           threeLineSummary: body.threeLineSummary ?? body.three_line_summary,
+          startingQuestion: body.startingQuestion ?? body.starting_question,
+          thesisChangeReason: body.thesisChangeReason ?? body.thesis_change_reason,
+          viewpointChangeSourceNoteIds: body.viewpointChangeSourceNoteIds ?? body.viewpoint_change_source_note_ids,
+          viewpointChangeStatus: body.viewpointChangeStatus ?? body.viewpoint_change_status,
+          commitViewpointChange: body.commitViewpointChange ?? body.commit_viewpoint_change,
           distillationStatus: body.distillationStatus ?? body.distillation_status,
           boundaryOrCounterpoint: body.boundaryOrCounterpoint ?? body.boundary_or_counterpoint,
           originalityStatus: body.originalityStatus ?? body.originality_status,
@@ -5551,6 +5556,11 @@ const server = http.createServer(async (req, res) => {
         const item = await updatePermanentNoteDistillation(VAULT_PATH, permanentNoteDistillationId, {
           thesis: body.thesis,
           threeLineSummary: body.threeLineSummary ?? body.three_line_summary,
+          startingQuestion: body.startingQuestion ?? body.starting_question,
+          thesisChangeReason: body.thesisChangeReason ?? body.thesis_change_reason,
+          viewpointChangeSourceNoteIds: body.viewpointChangeSourceNoteIds ?? body.viewpoint_change_source_note_ids,
+          viewpointChangeStatus: body.viewpointChangeStatus ?? body.viewpoint_change_status,
+          commitViewpointChange: body.commitViewpointChange ?? body.commit_viewpoint_change,
           distillationStatus: body.distillationStatus ?? body.distillation_status,
           boundaryOrCounterpoint: body.boundaryOrCounterpoint ?? body.boundary_or_counterpoint
         });
@@ -5871,6 +5881,9 @@ const server = http.createServer(async (req, res) => {
           status: body.status,
           thesis: body.thesis,
           threeLineSummary: body.threeLineSummary ?? body.three_line_summary,
+          startingQuestion: body.startingQuestion ?? body.starting_question,
+          thesisChangeReason: body.thesisChangeReason ?? body.thesis_change_reason,
+          viewpointChangeSourceNoteIds: body.viewpointChangeSourceNoteIds ?? body.viewpoint_change_source_note_ids,
           distillationStatus: body.distillationStatus ?? body.distillation_status,
           boundaryOrCounterpoint: body.boundaryOrCounterpoint ?? body.boundary_or_counterpoint,
           originalityStatus: body.originalityStatus ?? body.originality_status,

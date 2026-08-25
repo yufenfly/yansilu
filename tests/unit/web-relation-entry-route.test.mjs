@@ -81,6 +81,7 @@ test("right sidebar permanent workspace route keeps mode and returns to sidebar"
   assert.equal(route.targetNoteId, "note-b");
   assert.equal(route.mode, "manual");
   assert.equal(route.returnTo, "right-sidebar");
+  assert.equal(route.relationType, "associated_with");
 });
 
 test("graph action route reads data attributes and remembers graph return", () => {

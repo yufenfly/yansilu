@@ -40,12 +40,13 @@ import { createModuleWorkspaceHeaderRuntimeRoutes } from "./app-module-header-ru
 import { createSidebarTitleController } from "./app-shell-sidebar-controller.js";
 import { createSidebarTitlePrototypeDepsProvider } from "./app-shell-sidebar-host-deps.js";
 import { installSidebarFlowEventHandler } from "./app-shell-sidebar-flow.js";
+import { buildSmartNotesDemoWalkthrough, renderSmartNotesDemoGuidePanel } from "./beginner-onboarding-flow.js";
 import { installMobileNoteEventBindings } from "./mobile-note-event-bindings.js";
 import { createAppShellStateChangePrototypeDepsProvider } from "./app-shell-state-change-host-deps.js";
 import { handleCreateDirectoryFromDialog } from "./app-shell-state-file-actions.js";
 import { routeAppShellStateChange } from "./app-shell-state-change-router.js";
 import { bootstrapAppForRuntime } from "./app-startup-controller.js";
-import { smartNotesDemoExistingFolder, smartNotesDemoImportedStatus, smartNotesDemoOpenedExistingGuideStatus, smartNotesDemoStartupNoteId, shouldRefreshHomeAfterSmartNotesDemoImport } from "./smart-notes-demo-startup-note.js";
+import { SMART_NOTES_DEMO_GUIDE_DIRECTORY_ID, smartNotesDemoExistingFolder, smartNotesDemoImportedStatus, smartNotesDemoOpenedExistingGuideStatus, smartNotesDemoStartupNoteId, shouldRefreshHomeAfterSmartNotesDemoImport } from "./smart-notes-demo-startup-note.js";
 import { candidatePreviewItemIds, candidatePreviewItems, confirmSkipReasonMap, confirmSkippedCandidateIds, selectionSummary as summarizeCandidateSelection } from "./import-candidate-preview-model.js";
 import { renderCandidatePreview, renderConfirmSkipBreakdown } from "./import-candidate-preview-panel.js";
 import { selectedCandidateIdsForImportAction } from "./import-selection-actions.js";
@@ -3184,9 +3185,18 @@ function renderExplorerSidebarFlow(rootId = state.browserRootId) {
 function renderSmartNotesDemoGuide() {
   const element = $("demoGuidePanel");
   if (!element) return null;
-  element.classList.add("hidden");
-  element.innerHTML = "";
-  return null;
+  const flow = buildSmartNotesDemoWalkthrough({
+    notes: state.notes,
+    completedSteps: state.smartNotesDemoCompletedSteps
+  });
+  if (!flow) {
+    element.classList.add("hidden");
+    element.innerHTML = "";
+    return null;
+  }
+  element.innerHTML = renderSmartNotesDemoGuidePanel(flow, { escapeHtml });
+  element.classList.remove("hidden");
+  return flow;
 }
 
 function syncNewNoteButtons() {
@@ -4007,6 +4017,12 @@ function activateModule(moduleName) {
   if (normalizedModule === "graph") expandGraphBrowserTree();
   syncRailSelectionState();
   renderAll();
+  if (normalizedModule === "graph") {
+    window.requestAnimationFrame(() => {
+      centerGraphViewportIfZoomed();
+      window.setTimeout(() => centerGraphViewportIfZoomed(), 0);
+    });
+  }
 }
 
 const {
@@ -5435,7 +5451,7 @@ function renderGraphPanel() {
 }
 
 async function refreshDirectoryGraph() {
-  return refreshDirectoryGraphForRuntime({
+  const refreshed = await refreshDirectoryGraphForRuntime({
     graphState,
     graphScopeDirectoryId,
     graphOriginalScopeDirectoryId: GRAPH_ORIGINAL_SCOPE_DIRECTORY_ID,
@@ -5449,6 +5465,8 @@ async function refreshDirectoryGraph() {
     renderGraphPanel,
     renderAll
   });
+  window.requestAnimationFrame(() => centerGraphViewportIfZoomed());
+  return refreshed;
 }
 
 const graphRouteRuntime = createGraphRouteRuntime({
@@ -5539,6 +5557,7 @@ async function importSmartNotesProductThinkingDemo(options = {}) {
     state.browserRootId = rootBoxIdFromFolder(state, directoryId);
     state.selectedFolderId = directoryId;
     await syncNotesForDirectoryTree(directoryId);
+    await syncNotesForDirectory(SMART_NOTES_DEMO_GUIDE_DIRECTORY_ID);
     await syncNotesForDirectory("dir_fleeting_default");
     await syncNotesForDirectory("dir_literature_default");
     await loadWritingThemeIndexes();
@@ -5569,15 +5588,17 @@ async function importSmartNotesProductThinkingDemo(options = {}) {
       resetGraphDemoPresentationState();
     }
     await refreshDirectoryGraph();
-    if (shouldRefreshHome) activateModule("today");
+    if (shouldOpenGuide) activateModule("explorer");
+    else if (shouldRefreshHome) activateModule("today");
     renderAll();
     if (shouldOpenGuide) {
       state.selectedFileId = firstNoteId;
       openNoteById(firstNoteId, { preferTitleSelection: false });
       editor?.resetEditorViewportToStart?.();
     }
-    const importedStatus = smartNotesDemoImportedStatus(result, { openedGuide: shouldOpenGuide, refreshedHome: shouldRefreshHome });
-    if (shouldRefreshHome) {
+    const refreshedHome = shouldRefreshHome && !shouldOpenGuide;
+    const importedStatus = smartNotesDemoImportedStatus(result, { openedGuide: shouldOpenGuide, refreshedHome });
+    if (refreshedHome) {
       state.todayNoticeMessage = importedStatus;
       renderAll();
     }
@@ -5593,13 +5614,14 @@ async function importSmartNotesProductThinkingDemo(options = {}) {
             state.browserRootId = rootBoxIdFromFolder(state, demoFolder.id);
             state.selectedFolderId = demoFolder.id;
             await syncNotesForDirectory(demoFolder.id);
+            await syncNotesForDirectory(SMART_NOTES_DEMO_GUIDE_DIRECTORY_ID);
           }
         } catch {}
       }
       const fallbackNoteId = smartNotesDemoStartupNoteId({ result: {}, notes: state.notes });
       if (fallbackNoteId) {
         state.selectedFileId = fallbackNoteId;
-        activateModule("today");
+        activateModule("explorer");
         openNoteById(fallbackNoteId, { preferTitleSelection: false });
         editor?.resetEditorViewportToStart?.();
         setStatus(smartNotesDemoOpenedExistingGuideStatus(), "ok");
@@ -5958,6 +5980,7 @@ const editor = new EditorPane(createEditorPaneHostDeps({
   selectPermanentDirectory,
   currentLiteratureTemplateSectionLabels,
   literatureTemplateSectionLabelCandidates,
+  currentVaultPath,
   renderStatusMeta,
   renderWorkspaceStatusHint,
   refreshDirectoryGraph,
@@ -6499,6 +6522,7 @@ installSidebarFlowEventHandler({
     continueWritingProjectEntry,
     handleStateChange,
     openNoteById,
+    renderAll,
     setStatus,
     dismissSafeOverlaysForNavigation: () => dismissSafeOverlaysForNavigation({
       graphState,

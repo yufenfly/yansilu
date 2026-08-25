@@ -31,11 +31,9 @@ export async function openDistillationQueueNoteRoute(noteId = "", deps = {}) {
     const selector =
       stage === "needs_thesis"
         ? '[data-note-distillation-form] textarea[name="thesis"]'
-        : stage === "needs_summary"
-          ? '[data-note-distillation-form] textarea[name="summary1"]'
-          : stage === "needs_confirm"
-            ? "[data-note-distillation-confirm]"
-            : "[data-note-distillation-section]";
+        : stage === "needs_confirm"
+          ? '[data-note-distillation-form] button[type="submit"]'
+          : "[data-note-distillation-section]";
     documentRef?.querySelector?.("[data-note-distillation-section]")?.scrollIntoView({ block: "start", behavior: "smooth" });
     documentRef?.querySelector?.(selector)?.focus?.();
   });

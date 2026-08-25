@@ -13212,7 +13212,7 @@
     }
     @media (min-width: 1500px) {
       #relatedPanel [data-note-distillation-form] {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr);
       }
     }
     @media (max-width: 1280px) {
@@ -13978,6 +13978,116 @@
       background: #0f766e;
       box-shadow: 0 8px 18px rgba(15, 118, 110, 0.18);
     }
+    .viewpoint-change-reason[hidden] {
+      display: none;
+    }
+    .viewpoint-change-reason {
+      display: grid;
+      gap: 10px;
+    }
+    .viewpoint-change-sources {
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+    .viewpoint-change-sources legend {
+      margin-bottom: 7px;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .viewpoint-change-source-list {
+      display: grid;
+      gap: 6px;
+      max-height: 132px;
+      overflow-y: auto;
+    }
+    .viewpoint-change-source-list label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .viewpoint-change-source-list input {
+      flex: 0 0 auto;
+    }
+    .viewpoint-change-source-list span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .viewpoint-optional-details {
+      border-top: 1px solid #e6eeeb;
+      padding-top: 10px;
+    }
+    .viewpoint-optional-details > summary {
+      color: #52627a;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .viewpoint-optional-fields {
+      display: grid;
+      gap: 10px;
+      padding-top: 12px;
+    }
+    .viewpoint-formation {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .viewpoint-formation-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e6eeeb;
+    }
+    .viewpoint-formation-head strong {
+      color: #10202a;
+      font-size: 13px;
+    }
+    .viewpoint-formation-head span,
+    .viewpoint-formation-empty {
+      color: #64748b;
+      font-size: 12px;
+    }
+    .viewpoint-formation-list {
+      display: grid;
+      gap: 0;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .viewpoint-formation-step {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: 4px 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #edf2f0;
+    }
+    .viewpoint-formation-step > span {
+      color: #0f766e;
+      font-size: 11px;
+      font-weight: 850;
+    }
+    .viewpoint-formation-step > strong {
+      color: #172b32;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .viewpoint-formation-step > small {
+      grid-column: 2;
+      color: #64748b;
+      font-size: 11px;
+      line-height: 1.55;
+    }
+    .viewpoint-formation-step.is-current > strong {
+      color: #0f5f55;
+    }
     .permanent-workspace-current {
       display: grid;
       gap: 9px;
@@ -14265,6 +14375,66 @@
       font-size: 11px;
       font-weight: 850;
       line-height: 1.35;
+    }
+    .permanent-relation-type-choice {
+      display: grid;
+      gap: 8px;
+    }
+    .permanent-relation-type-choice > span,
+    .permanent-relation-more-types label span {
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+    .permanent-relation-type-choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .permanent-relation-type-card {
+      min-height: 94px;
+      display: grid;
+      align-content: start;
+      gap: 6px;
+      border: 1px solid #d9e5ec;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #10202a;
+      cursor: pointer;
+      font: inherit;
+      padding: 12px;
+      text-align: left;
+    }
+    .permanent-relation-type-card strong {
+      font-size: 14px;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+    .permanent-relation-type-card small {
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 650;
+      line-height: 1.45;
+    }
+    .permanent-relation-type-card:hover,
+    .permanent-relation-type-card.is-active {
+      border-color: rgba(14, 116, 144, 0.52);
+      background: #ecfeff;
+      color: #0f5f68;
+    }
+    .permanent-relation-more-types {
+      color: #52657d;
+      font-size: 12px;
+      font-weight: 750;
+    }
+    .permanent-relation-more-types summary {
+      cursor: pointer;
+    }
+    .permanent-relation-more-types label {
+      display: grid;
+      gap: 6px;
+      margin-top: 10px;
     }
     .permanent-relation-source strong,
     .permanent-relation-preview strong {
@@ -22427,6 +22597,7 @@
     @media (max-width: 920px) {
       .permanent-relation-overlay {
         left: 0;
+        z-index: 3000;
       }
       .demo-guide-panel-card {
         grid-template-columns: 1fr;
@@ -22439,6 +22610,18 @@
 
       .demo-guide-action {
         width: 100%;
+      }
+      .permanent-relation-type-choice-grid {
+        grid-template-columns: 1fr;
+      }
+      .viewpoint-formation-step {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .viewpoint-formation-step > small {
+        grid-column: 1;
+      }
+      .permanent-relation-type-card {
+        min-height: 0;
       }
       .sidebar-flow-card[data-smart-notes-demo-walkthrough] {
         order: -20;

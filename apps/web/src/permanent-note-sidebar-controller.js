@@ -59,11 +59,13 @@ export class PermanentNoteSidebarController {
       entryRoute
     });
     host.syncPermanentRelationWorkspaceOverlay();
-    window.setTimeout(() => {
+    const focusWorkspace = () => {
       host.permanentRelationWorkspaceElement()?.querySelector?.(permanentRelationWorkspaceFocusSelector({
         selectedTargetNoteId
       }))?.focus?.();
-    }, 40);
+    };
+    window.setTimeout(focusWorkspace, 40);
+    window.setTimeout(focusWorkspace, 250);
     return true;
   }
 

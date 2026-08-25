@@ -8,7 +8,7 @@ test("distillation note route opens note in explorer and focuses the matching di
   const state = {
     module: "distillation",
     inspectorVisible: true,
-    notes: [{ id: "note-1", stage: "needs_summary" }]
+    notes: [{ id: "note-1", stage: "needs_confirm" }]
   };
   const railButton = {
     dataset: { module: "explorer" },
@@ -54,5 +54,5 @@ test("distillation note route opens note in explorer and focuses the matching di
   assert.ok(calls.some(([name, noteId]) => name === "loaded" && noteId === "note-1"));
   assert.ok(calls.some(([name, noteId]) => name === "open" && noteId === "note-1"));
   assert.ok(calls.some(([name, visible]) => name === "inspector" && visible === false));
-  assert.ok(focused.some(([name, selector]) => name === "focus" && selector.includes("summary1")));
+  assert.ok(focused.some(([name, selector]) => name === "focus" && selector.includes('button[type="submit"]')));
 });

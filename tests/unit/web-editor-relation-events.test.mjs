@@ -153,6 +153,33 @@ test("permanent relation open action keeps sidebar route context", () => {
   assert.equal(opened[0].noteId, "note-current");
 });
 
+test("relation type choice updates the permanent relation workspace", () => {
+  const calls = [];
+  const choice = attrElement({
+    "data-permanent-relation-type-choice": "contradicts"
+  });
+  const target = elementWithClosest({
+    "[data-relation-template-merge-action]": null,
+    "[data-relation-template-variant]": null,
+    "[data-permanent-relation-mode]": null,
+    "[data-permanent-relation-action]": null,
+    "[data-relation-target-choice]": null,
+    "[data-relation-action]": null,
+    "[data-permanent-relation-type-choice]": choice
+  });
+  const host = {
+    updatePermanentRelationWorkspaceField(field, value) {
+      calls.push([field, value]);
+    },
+    syncPermanentRelationWorkspaceOverlay() {
+      calls.push(["sync"]);
+    }
+  };
+
+  assert.equal(routeEditorRelationClick(host, eventFor(target)), true);
+  assert.deepEqual(calls, [["relationType", "contradicts"], ["sync"]]);
+});
+
 test("existing relation edit opens the permanent relation workspace", () => {
   const opened = [];
   const relationAction = attrElement({}, {

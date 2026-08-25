@@ -18,7 +18,7 @@ export function isMarkdownWikilinkSemanticRelation(link = {}) {
 export function countExplicitSemanticRelations(relations = null) {
   const outgoing = Array.isArray(relations?.outgoingLinks) ? relations.outgoingLinks : [];
   const backlinks = Array.isArray(relations?.backlinks) ? relations.backlinks : [];
-  return [...outgoing, ...backlinks].filter((link) => !isHiddenSemanticRelation(link) && !isMarkdownWikilinkSemanticRelation(link)).length;
+  return [...outgoing, ...backlinks].filter((link) => !isHiddenSemanticRelation(link)).length;
 }
 
 export function deriveNoteWritingReadiness(note = {}, overview = {}) {

@@ -60,6 +60,11 @@ export function mapNoteItem(item, {
       ? item.threeLineSummary || item.three_line_summary
       : [],
     distillationStatus: item.distillationStatus || item.distillation_status || "",
+    startingQuestion: item.startingQuestion || item.starting_question || "",
+    viewpointHistory: Array.isArray(item.viewpointHistory || item.viewpoint_history)
+      ? item.viewpointHistory || item.viewpoint_history
+      : [],
+    pendingViewpointRevision: item.pendingViewpointRevision || item.pending_viewpoint_revision || null,
     thinkingStatus: normalizeThinkingStatusItem(item.thinkingStatus),
     generatedOriginalNoteId:
       String(item.generatedOriginalNoteId || item.generated_original_note_id || generatedOriginalNoteIdFromBody(body)).trim(),
@@ -103,6 +108,9 @@ export function createLocalDraftNote({ folderId, body }, {
     thesis: "",
     threeLineSummary: [],
     distillationStatus: "",
+    startingQuestion: "",
+    viewpointHistory: [],
+    pendingViewpointRevision: null,
     thinkingStatus: null,
     generatedOriginalNoteId: generatedOriginalNoteIdFromBody(nextBody),
     relationNetworkStatus: relationNetworkStatusForNote({
@@ -176,11 +184,9 @@ export function distillationStatusOf(note = null) {
 
 export function distillationReasonOf(note = null) {
   const thesis = String(note?.thesis || "").trim();
-  const summary = Array.isArray(note?.threeLineSummary) ? note.threeLineSummary.filter((item) => String(item || "").trim()) : [];
   const status = distillationStatusOf(note);
   if (status === "confirmed") return "已确认观点";
   if (!thesis) return "待写一句话判断";
-  if (summary.length < 3) return `三句话压缩还差 ${3 - summary.length} 句`;
   return "待确认观点";
 }
 
@@ -208,17 +214,14 @@ export function writingProjectStatusLabel(status = "") {
 export function distillationStageOf(note = null) {
   const status = distillationStatusOf(note);
   const thesis = String(note?.thesis || "").trim();
-  const summary = Array.isArray(note?.threeLineSummary) ? note.threeLineSummary.filter((item) => String(item || "").trim()) : [];
   if (status === "confirmed") return "confirmed";
   if (!thesis) return "needs_thesis";
-  if (summary.length < 3) return "needs_summary";
   return "needs_confirm";
 }
 
 export function distillationStageLabel(stage = "") {
   const labels = {
     needs_thesis: "待一句话判断",
-    needs_summary: "待三句话压缩",
     needs_confirm: "待确认",
     confirmed: "已确认"
   };

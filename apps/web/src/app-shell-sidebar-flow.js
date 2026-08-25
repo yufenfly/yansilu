@@ -1,5 +1,6 @@
 import {
   buildSmartNotesDemoWalkthrough,
+  completeSmartNotesDemoStep,
   renderSmartNotesDemoWalkthrough
 } from "./beginner-onboarding-flow.js";
 
@@ -21,15 +22,13 @@ export function distillationSummaryForSidebarFlow(notes = [], deps = {}) {
   return notes.reduce(
     (acc, note) => {
       const thesis = String(note?.thesis || "").trim();
-      const summary = Array.isArray(note?.threeLineSummary) ? note.threeLineSummary.filter((item) => String(item || "").trim()) : [];
       const confirmed = distillationStatusOf(note) === "confirmed";
       if (!thesis) acc.missingThesis += 1;
-      if (summary.length < 3) acc.missingSummary += 1;
-      if (!confirmed && thesis && summary.length >= 3) acc.needsConfirm += 1;
+      if (!confirmed && thesis) acc.needsConfirm += 1;
       if (!noteHasBoundarySignal(note)) acc.missingBoundary += 1;
       if (!confirmed) acc.pending += 1;
       if (confirmed) acc.confirmed += 1;
-      if (confirmed && thesis && summary.length >= 3) acc.writingReady += 1;
+      if (confirmed && thesis) acc.writingReady += 1;
       return acc;
     },
     {
@@ -37,14 +36,13 @@ export function distillationSummaryForSidebarFlow(notes = [], deps = {}) {
       confirmed: 0,
       writingReady: 0,
       missingThesis: 0,
-      missingSummary: 0,
       needsConfirm: 0,
       missingBoundary: 0
     }
   );
 }
 
-export function buildExplorerSidebarFlowState({ rootId = "", currentNotes = [], originalNotes = [], allNotes = [], selectedNoteId = "" } = {}, deps = {}) {
+export function buildExplorerSidebarFlowState({ rootId = "", currentNotes = [], originalNotes = [], allNotes = [], selectedNoteId = "", demoCompletedSteps = [] } = {}, deps = {}) {
   const {
     noteHasGeneratedOriginal = () => false,
     isPermanentLikeNote = () => false
@@ -55,7 +53,8 @@ export function buildExplorerSidebarFlowState({ rootId = "", currentNotes = [], 
       ...(Array.isArray(currentNotes) ? currentNotes : []),
       ...(Array.isArray(originalNotes) ? originalNotes : [])
     ],
-    selectedNoteId
+    selectedNoteId,
+    completedSteps: demoCompletedSteps
   });
   if (demoWalkthrough) return demoWalkthrough;
   const isOriginal = rootId === "dir_original_default";
@@ -67,7 +66,6 @@ export function buildExplorerSidebarFlowState({ rootId = "", currentNotes = [], 
   const distillation = distillationSummaryForSidebarFlow(originalNotes.filter((note) => isPermanentLikeNote(note)), deps);
   const topGaps = [
     distillation.missingThesis ? `缺一句话判断 ${distillation.missingThesis}` : "",
-    distillation.missingSummary ? `缺三句话压缩 ${distillation.missingSummary}` : "",
     distillation.needsConfirm ? `待确认观点 ${distillation.needsConfirm}` : "",
     distillation.missingBoundary ? `缺边界/反例 ${distillation.missingBoundary}` : ""
   ].filter(Boolean);
@@ -93,8 +91,8 @@ export function buildExplorerSidebarFlowState({ rootId = "", currentNotes = [], 
   const steps = isOriginal
     ? [
         ["写一句判断", distillation.missingThesis < originalNotes.length],
-        ["压缩成三句话", distillation.missingSummary < originalNotes.length],
         ["确认观点", distillation.confirmed > 0],
+        ["建立关系", linkedOriginalCount > 0],
         ["写作中心", distillation.writingReady > 0]
       ]
     : [
@@ -190,6 +188,7 @@ export async function handleSidebarFlowAction(event, deps = {}) {
     state = {},
     handleStateChange = async () => {},
     openNoteById = () => false,
+    renderAll = () => {},
     setStatus = () => {},
     dismissSafeOverlaysForNavigation = () => ({ ok: true })
   } = deps;
@@ -224,9 +223,16 @@ export async function handleSidebarFlowAction(event, deps = {}) {
       return false;
     }
     if (action === "open-demo-note-relations") {
+      state.smartNotesDemoPendingRelationStep = {
+        key: String(button.dataset?.sidebarFlowStepKey || "first-relation").trim() || "first-relation",
+        noteId
+      };
       await handleStateChange("open-note-relations", { noteId, source: "smart-notes-demo-walkthrough" });
       setStatus("已打开导览笔记，可以开始补关系理由。", "ok");
     } else {
+      const stepKey = String(button.dataset?.sidebarFlowStepKey || "").trim();
+      if (stepKey) state.smartNotesDemoCompletedSteps = completeSmartNotesDemoStep(state.smartNotesDemoCompletedSteps, stepKey);
+      renderAll();
       setStatus("已打开导览笔记。", "ok");
     }
     return true;
@@ -243,6 +249,9 @@ export async function handleSidebarFlowAction(event, deps = {}) {
         statusMessage: "已打开 Smart Notes Demo 的可追溯文章提纲。"
       });
       if (!project) throw new Error("示例写作项目不可用");
+      const stepKey = String(button.dataset?.sidebarFlowStepKey || "").trim();
+      if (stepKey) state.smartNotesDemoCompletedSteps = completeSmartNotesDemoStep(state.smartNotesDemoCompletedSteps, stepKey);
+      renderAll();
       return true;
     } catch (error) {
       setStatus(`打开示例文章提纲失败：${String(error?.message || error)}`, "warn");

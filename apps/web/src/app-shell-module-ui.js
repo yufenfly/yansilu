@@ -19,18 +19,18 @@ export function currentModuleSidebarUi({
       sidebarSubtitle: "把永久笔记推进成清晰观点。",
       sidebarFoot: "观点整理只给出建议；你确认后才会写入笔记。",
       title: "观点整理",
-      summary: "这里集中处理永久笔记的一句话判断、三句话压缩与确认状态。先让观点变清楚，再进入关系、主题与写作。",
+      summary: "写下并确认当前观点，再用关系检验它、补充它。",
       sidebarHtml: `
         <div class="module-sidebar-card">
           <h3>当前目标</h3>
-          <p>从 <strong>${escapeHtml(resolvedRootName)}</strong> 中找出还缺一句话判断、三句话压缩或确认动作的永久笔记，逐条推进。</p>
+          <p>从 <strong>${escapeHtml(resolvedRootName)}</strong> 中找出还没有当前观点或尚未确认的永久笔记。</p>
         </div>
         <div class="module-sidebar-card">
           <h3>处理顺序</h3>
           <ol class="module-sidebar-list">
-            <li>先写一句判断</li>
-            <li>再压缩成三句话</li>
-            <li>最后确认这确实是你的观点</li>
+            <li>写下当前观点</li>
+            <li>需要时补充说明</li>
+            <li>保存后继续建立关系</li>
           </ol>
         </div>
       `

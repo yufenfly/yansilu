@@ -1,6 +1,5 @@
 import { escapeHtml } from "./editor-render-utils.js";
 import { parseLinks, parseTags } from "./prototype-store.js";
-import { noteHasBoundarySignal } from "./editor-template-workspace.js";
 
 const UNTITLED_NOTE_TITLE = "未命名笔记";
 
@@ -78,14 +77,7 @@ export function looksLikeStableNoteId(value = "") {
 }
 
 export function relationCreateDefaultTypeForNote(note = {}) {
-  const body = String(note?.body || "").trim();
-  if (/反例|counterexample/i.test(body)) return "counterexample_to";
-  if (noteHasBoundarySignal(note)) return "qualifies";
-  if (/例如|比如|for example|for instance/i.test(body)) return "example_of";
-  const links = parseLinks(body);
-  const tags = parseTags(body);
-  if (links.length || tags.length) return "same_topic";
-  return "supports";
+  return "associated_with";
 }
 
 export function resolveRelationCandidateToken(token = "", candidates = []) {

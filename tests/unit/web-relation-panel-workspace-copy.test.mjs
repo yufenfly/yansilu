@@ -189,7 +189,7 @@ test("relation workspace separates body links and external relations with user-f
   assert.match(html, /data-relation-tab="external"/);
   assert.match(html, /data-relation-tab="body"/);
   assert.match(html, />AI推荐 2<\/button>/);
-  assert.match(html, /semantic-relation-add-btn[^>]*>添加外部关联<\/button>/);
+  assert.match(html, /semantic-relation-add-btn[^>]*data-permanent-relation-mode="manual"[^>]*>搜索笔记<\/button>/);
   assert.match(html, /外部关联/);
   assert.match(html, /正文链接/);
   assert.match(html, /取消外部关联/);

@@ -290,6 +290,7 @@ test("startup route opener opens existing Smart Notes Demo guide instead of show
         title: "00 从这里开始：10 分钟走完研思录"
       });
     },
+    activateModule: (moduleName) => calls.push(["module", moduleName]),
     openNoteById: (id, options) => calls.push(["open", id, options]),
     setStatus: (message, tone) => calls.push(["status", tone, message])
   });
@@ -299,8 +300,10 @@ test("startup route opener opens existing Smart Notes Demo guide instead of show
   assert.equal(state.browserRootId, "root:demo-dir");
   assert.equal(state.selectedFolderId, "demo-dir");
   assert.deepEqual(calls[0], ["sync", "demo-dir"]);
-  assert.equal(calls[1][0], "open");
-  assert.equal(calls[2][1], "ok");
+  assert.deepEqual(calls[1], ["sync", "dir_demo_smart_notes_product_thinking_guide"]);
+  assert.deepEqual(calls[2], ["module", "explorer"]);
+  assert.equal(calls[3][0], "open");
+  assert.equal(calls[4][1], "ok");
 });
 
 test("startup route opener falls back to home when existing Smart Notes Demo guide cannot load", async () => {

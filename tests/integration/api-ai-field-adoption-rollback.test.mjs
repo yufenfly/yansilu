@@ -77,7 +77,8 @@ test("AI field adoption rolls note and inbox state back if the linked suggestion
     directoryId: "dir_original_default",
     title: "Rollback target",
     noteType: "permanent",
-    body: "# Rollback target\n\nThis note should keep its pre-adoption state if the review commit fails."
+    body: "# Rollback target\n\nThis note should keep its pre-adoption state if the review commit fails.",
+    thesis: "The original viewpoint must survive a failed AI draft adoption."
   });
   assert.equal(note.status, 201, JSON.stringify(note.json));
 
@@ -112,6 +113,8 @@ test("AI field adoption rolls note and inbox state back if the linked suggestion
   assert.equal(noteAfterFailure.status, 200, JSON.stringify(noteAfterFailure.json));
   assert.equal(noteAfterFailure.json.item.title, originalDetail.json.item.title);
   assert.equal(noteAfterFailure.json.item.body, originalDetail.json.item.body);
+  assert.equal(noteAfterFailure.json.item.thesis, originalDetail.json.item.thesis);
+  assert.deepEqual(noteAfterFailure.json.item.viewpointHistory, originalDetail.json.item.viewpointHistory);
   assert.equal(noteAfterFailure.json.item.authorship?.ai_assisted === true, false);
 
   const inboxDetail = await getJson(baseUrl, `/api/v1/ai/inbox/${encodeURIComponent(artifact.id)}?canonical=true`);

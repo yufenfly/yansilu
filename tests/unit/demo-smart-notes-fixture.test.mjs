@@ -18,9 +18,7 @@ const FORBIDDEN_TOPIC_PATTERN = /易经|卦|君子是行动者模型/;
 const REQUIRED_INDEX_TITLES = [
   "永久笔记是什么？",
   "为什么要关联笔记？",
-  "知识网络为什么会形成复利？",
-  "关联笔记有哪些关系？如何设置关系？",
-  "手机笔记功能和电脑笔记功能有什么区别？如何形成互动？"
+  "如何从主题索引进入写作中心？"
 ];
 
 function allNotes() {
@@ -78,14 +76,14 @@ function wikilinkTargets(value) {
 
 test("Smart Notes demo fixture has the required teaching surfaces", () => {
   assert.ok(fixture.sources.length >= 1);
-  assert.ok(fixture.fleeting_notes.length >= 4);
-  assert.ok(fixture.literature_notes.length >= 6);
-  assert.ok(fixture.permanent_notes.length >= 45);
+  assert.ok(fixture.fleeting_notes.length >= 3);
+  assert.ok(fixture.literature_notes.length >= 4);
+  assert.ok(fixture.permanent_notes.length >= 12);
   assert.ok(fixture.index_cards.length >= REQUIRED_INDEX_TITLES.length);
-  assert.ok(fixture.relations.length >= 40);
+  assert.ok(fixture.relations.length >= 12);
   assert.ok(fixture.writing_projects.length >= 1);
   assert.ok(fixture.draft_scaffolds.length >= 1);
-  assert.ok(fixture.guide_notes.length >= 12);
+  assert.ok(fixture.guide_notes.length >= 6);
 });
 
 test("Smart Notes demo fixture exposes accurate counts for import feedback", () => {
@@ -121,7 +119,6 @@ test("key permanent notes contain clickable internal links by readable title or 
   const required = [
     "PERM-WRITING-STARTS-BEFORE-DRAFT",
     "PERM-PERMANENT-NOTE-IS-JUDGMENT",
-    "PERM-RELATION-REASON-MATTERS",
     "PERM-THEME-INDEX-IS-ENTRY",
     "PERM-WRITING-CENTER-FROM-CONFIRMED-NOTES"
   ];
@@ -154,37 +151,35 @@ test("relations point to existing notes and carry readable reasons", () => {
     assert.ok(String(relation.insight_question || "").length >= 12, `${relation.id} needs an insight question`);
     types.add(relation.relationType);
   }
-  for (const type of ["supports", "complements", "qualifies", "contradicts", "example_of", "precedes", "bridges", "associated_with", "same_topic"]) {
+  for (const type of ["supports", "qualifies", "contradicts", "precedes", "bridges", "associated_with"]) {
     assert.ok(types.has(type), `missing relation type ${type}`);
   }
 });
 
-test("demo teaches relation types as writing and insight tools", () => {
+test("demo teaches the relation choices needed for the first knowledge chain", () => {
   const requiredPermanentNotes = [
-    "PERM-RELATION-TYPE-IS-A-READING-INSTRUCTION",
     "PERM-SUPPORT-RELATION-BECOMES-EVIDENCE",
     "PERM-CONTRAST-RELATION-CREATES-ARGUMENT",
-    "PERM-LIMIT-RELATION-PROTECTS-OVERCLAIM",
-    "PERM-BRIDGE-RELATION-FINDS-NEW-THEME",
-    "PERM-GAP-RELATION-POINTS-TO-NEXT-READING",
-    "PERM-RELATION-REASON-WRITES-FUTURE-PARAGRAPH",
-    "PERM-WRITING-USES-RELATION-ROLES"
+    "PERM-BOUNDARY-MAKES-NOTE-RELIABLE",
+    "PERM-RELATION-REASON-MATTERS"
   ];
   const permanentIds = new Set(fixture.permanent_notes.map((note) => note.id));
   for (const id of requiredPermanentNotes) assert.ok(permanentIds.has(id), `missing relation teaching note ${id}`);
 
-  assert.ok(
-    fixture.index_cards.some((card) => card.id === "THEME-RELATION-TYPES-TO-WRITING"),
-    "needs relation type to writing theme index"
-  );
-  assert.ok(
-    fixture.writing_projects.some((project) => project.id === "WRITE-RELATION-TO-WRITING-PRACTICE"),
-    "needs relation-to-writing writing project"
-  );
-  assert.ok(
-    fixture.final_essays.some((essay) => essay.id === "ESSAY-RELATION-TYPES-HELP"),
-    "needs relation type help article"
-  );
+  assert.ok(fixture.relations.some((relation) => relation.relationType === "supports"));
+  assert.ok(fixture.relations.some((relation) => relation.relationType === "contradicts"));
+  assert.ok(fixture.relations.some((relation) => relation.relationType === "qualifies"));
+});
+
+test("demo groups the real knowledge chain into readable graph clusters", () => {
+  const clusters = new Set(fixture.permanent_notes.map((note) => note.cluster_label));
+  assert.deepEqual(clusters, new Set(["材料到判断", "关系与复利", "主题到写作"]));
+  assert.ok(fixture.relations.some((relation) => (
+    relation.from === "PERM-COMPOUND-INTEREST-FROM-REUSE" && relation.to === "PERM-THEME-INDEX-IS-ENTRY"
+  )));
+  assert.ok(fixture.relations.some((relation) => (
+    relation.from === "PERM-THEME-INDEX-IS-ENTRY" && relation.to === "PERM-WRITING-CENTER-FROM-CONFIRMED-NOTES"
+  )));
 });
 
 test("theme indexes include the required beginner questions and valid note links", () => {
@@ -221,10 +216,24 @@ test("writing project starts from theme indexes and key permanent notes", () => 
 test("guide note is beginner friendly and opens the complete workflow", () => {
   const guide = fixture.guide_notes.find((note) => note.id === "GUIDE-SMART-NOTES-START");
   assert.ok(guide, "missing starting guide");
-  assert.match(guide.body, /记录材料 -> 用自己的话转述 -> 形成一条判断 -> 写清关系理由 -> 组织主题 -> 查看可追溯提纲/);
+  assert.match(guide.body, /记录材料 -> 用自己的话转述 -> 保存当前观点 -> 看它为什么变化 -> 建立关系 -> 组织主题 -> 查看提纲/);
   assert.match(guide.body, /\[\[手机上先记一句/);
-  assert.match(guide.body, /\[\[写作不是最后一步/);
+  assert.match(guide.body, /\[\[用自己的话重说，才能检查理解\]\]/);
   assert.match(guide.body, /\[\[关系理由练习：给已有笔记补一条说明\]\]/);
-  assert.match(guide.body, /\[\[03 为什么要建立关系？\|为什么要关联笔记？\]\]/);
+  assert.match(guide.body, /\[\[为什么要关联笔记？\]\]/);
   assert.doesNotMatch(guide.body, OLD_VISIBLE_ID_PATTERN);
+});
+
+test("demo includes a traceable viewpoint change with source notes", () => {
+  const note = fixture.permanent_notes.find((item) => item.id === "PERM-PERMANENT-NOTE-IS-JUDGMENT");
+
+  assert.ok(note, "missing viewpoint trace note");
+  assert.match(note.startingQuestion || "", /材料变成/);
+  assert.equal(note.viewpointHistory.length, 1);
+  assert.equal(note.viewpointHistory.at(-1)?.thesis, note.thesis);
+  assert.match(note.viewpointHistory[0].reason, /转述成自己的话/);
+  assert.deepEqual(note.viewpointHistory[0].sourceNoteIds, [
+    "PERM-PARAPHRASE-BEFORE-JUDGMENT",
+    "PERM-FLEETING-NOTE-IS-CAPTURE"
+  ]);
 });

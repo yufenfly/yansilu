@@ -20,15 +20,13 @@ export function permanentNoteViewpointState(note = {}) {
     thesis,
     summary,
     confirmed,
-    needsViewpoint: !confirmed || !thesis || summary.length < 3,
+    needsViewpoint: !confirmed || !thesis,
     status:
       !thesis
         ? "missing"
-        : summary.length < 3
-          ? "summary"
-          : confirmed
-            ? "confirmed"
-            : "draft"
+        : confirmed
+          ? "confirmed"
+          : "draft"
   };
 }
 

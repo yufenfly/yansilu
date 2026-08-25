@@ -227,6 +227,7 @@ export class EditorPane {
     selectPermanentDirectory,
     resolveLiteratureSectionLabels,
     resolveLiteratureSectionLabelCandidates,
+    vaultScope,
     refreshDirectoryGraph,
     renderAll
   }) {
@@ -247,6 +248,7 @@ export class EditorPane {
       typeof resolveLiteratureSectionLabels === "function" ? resolveLiteratureSectionLabels : () => ({});
     this.resolveLiteratureSectionLabelCandidates =
       typeof resolveLiteratureSectionLabelCandidates === "function" ? resolveLiteratureSectionLabelCandidates : null;
+    this.vaultScope = typeof vaultScope === "function" ? vaultScope : () => "";
     this.currentLinkCandidates = [];
     this.currentLinkIndex = 0;
     this.currentPinnedLinkId = "";
@@ -3268,6 +3270,15 @@ export class EditorPane {
         if (Object.prototype.hasOwnProperty.call(item, "distillationStatus")) {
           existing.distillationStatus = item.distillationStatus || "";
         }
+        if (Object.prototype.hasOwnProperty.call(item, "startingQuestion")) {
+          existing.startingQuestion = item.startingQuestion || "";
+        }
+        if (Object.prototype.hasOwnProperty.call(item, "viewpointHistory")) {
+          existing.viewpointHistory = Array.isArray(item.viewpointHistory) ? item.viewpointHistory : [];
+        }
+        if (Object.prototype.hasOwnProperty.call(item, "pendingViewpointRevision")) {
+          existing.pendingViewpointRevision = item.pendingViewpointRevision || null;
+        }
         if (typeof item.body === "string") {
           existing.body = item.body;
           existing.tags = parseTags(item.body);
@@ -3287,6 +3298,9 @@ export class EditorPane {
         thesis: item.thesis || "",
         threeLineSummary: Array.isArray(item.threeLineSummary) ? item.threeLineSummary : [],
         distillationStatus: item.distillationStatus || "",
+        startingQuestion: item.startingQuestion || "",
+        viewpointHistory: Array.isArray(item.viewpointHistory) ? item.viewpointHistory : [],
+        pendingViewpointRevision: item.pendingViewpointRevision || null,
         thinkingStatus: item.thinkingStatus || null,
         body,
         tags: parseTags(body),
@@ -3451,14 +3465,28 @@ export class EditorPane {
   async refreshRelationNetworkStatuses(...noteIds) {
     const ids = [...new Set(noteIds.map((item) => String(item || "").trim()).filter(Boolean))];
     if (!ids.length) return;
+    let thinkingStatusChanged = false;
     await Promise.all(
       ids.map(async (noteId) => {
         try {
-          const relations = await fetchNoteRelations(noteId);
+          const [relations, refreshedNote] = await Promise.all([
+            fetchNoteRelations(noteId),
+            fetchNote(noteId)
+          ]);
           this.applyRelationNetworkStatusesFromRelations(noteId, relations);
+          const note = this.state.notes.find((item) => item.id === noteId);
+          if (note && refreshedNote && Object.prototype.hasOwnProperty.call(refreshedNote, "thinkingStatus")) {
+            const previousStatus = JSON.stringify(note.thinkingStatus || null);
+            note.thinkingStatus = refreshedNote.thinkingStatus || null;
+            if (JSON.stringify(note.thinkingStatus) !== previousStatus) thinkingStatusChanged = true;
+          }
         } catch {}
       })
     );
+    if (thinkingStatusChanged) {
+      this.renderThinkingStatus();
+      this.renderAll?.();
+    }
   }
 
   hideSaveAiSuggestion() {
@@ -4611,23 +4639,16 @@ export class EditorPane {
 
   legacyPermanentNoteMainPathSummary(note, overview = {}) {
     const thesis = String(note?.thesis || "").trim();
-    const summary = Array.isArray(note?.threeLineSummary) ? note.threeLineSummary.filter((item) => String(item || "").trim()) : [];
     const confirmed = String(note?.distillationStatus || "").trim().toLowerCase() === "confirmed";
     const relationState = String(overview.relationState || "loaded").trim();
     const explicitRelationCount = Number(overview.explicitRelationCount || 0);
     const wikilinkCount = Number(overview.wikilinkCount || 0);
-    const connectedCount = explicitRelationCount + wikilinkCount;
+    const connectedCount = Math.max(explicitRelationCount, wikilinkCount);
 
     if (!thesis) {
       return {
         nextStep: "先写一句判断",
         summary: "这条永久笔记还没有稳定的判断句，先把它从材料变成可复用的观点。"
-      };
-    }
-    if (summary.length < 3) {
-      return {
-        nextStep: "补成三句话压缩",
-        summary: "判断已经出现，但还没有压缩成清晰的三句话，后面的关系和写作会发虚。"
       };
     }
     if (!confirmed) {
@@ -4694,8 +4715,8 @@ export class EditorPane {
     }
     if (wikilinkCount > 0 && tagRelatedCount === 0) {
       return {
-        status: `已有线索 ${themeSignalCount || wikilinkCount}`,
-        hint: "已经看得到一条可能关系，下一步是把为什么相关写清楚。",
+        status: `已连入 ${themeSignalCount || wikilinkCount}`,
+        hint: "正文链接已经形成真实连接，可以开始判断它在服务哪个主题。",
         badge: themeSignalCount || wikilinkCount,
         badgeLabel: String(themeSignalCount || wikilinkCount)
       };
@@ -4731,7 +4752,6 @@ export class EditorPane {
     const noteType = this.resolvedNoteType(note);
     if (!note?.id || (noteType !== "permanent" && noteType !== "original")) return "";
     const thesis = String(note.thesis || "").trim();
-    const summary = Array.isArray(note.threeLineSummary) ? note.threeLineSummary.filter((item) => String(item || "").trim()) : [];
     const confirmed = String(note.distillationStatus || "").trim().toLowerCase() === "confirmed";
     const relationState = String(overview.relationState || "loaded").trim();
     const explicitRelationCount = Number(overview.explicitRelationCount || 0);
@@ -4743,25 +4763,27 @@ export class EditorPane {
         ? "读取中"
         : relationState === "error"
           ? "读取失败"
-          : String(explicitRelationCount + wikilinkCount);
+           : String(Math.max(explicitRelationCount, wikilinkCount));
     const primaryAction =
-      !thesis || summary.length < 3 || !confirmed
+      !thesis || !confirmed
         ? "distillation"
-        : relationState === "loading" || relationState === "error" || explicitRelationCount + wikilinkCount === 0
+        : relationState === "loading" || relationState === "error" || Math.max(explicitRelationCount, wikilinkCount) === 0
           ? "relations"
           : "writing";
     const steps = [
       {
         label: "提炼观点",
-        status: !thesis ? "待开始" : summary.length < 3 ? "进行中" : confirmed ? "已确认" : "待确认",
-        hint: !thesis ? "先写一句判断" : summary.length < 3 ? "补三句话压缩" : confirmed ? "继续往关系和主题走" : "确认这条观点",
+        status: !thesis ? "待开始" : confirmed ? "已确认" : "待确认",
+        hint: !thesis ? "先写一句判断" : confirmed ? "继续往关系和主题走" : "确认这条观点",
         action: "distillation",
         actionLabel: "继续提纯"
       },
       {
         label: "整理关系",
-        status: explicitRelationCount ? `已建 ${explicitRelationCount}` : wikilinkCount ? `文中链接 ${wikilinkCount}` : "待建立",
-        hint: explicitRelationCount ? "已经有带理由的关系" : wikilinkCount ? "有基础链接，值得补理由" : "先连出第一条关系",
+        status: Math.max(explicitRelationCount, wikilinkCount)
+          ? `已建 ${Math.max(explicitRelationCount, wikilinkCount)}`
+          : "待建立",
+        hint: Math.max(explicitRelationCount, wikilinkCount) ? "已经形成真实关系" : "先连出第一条关系",
         action: "relations",
         actionLabel: "处理关系"
       },
@@ -4792,8 +4814,7 @@ export class EditorPane {
         </div>
         <div class="semantic-relation-status">
           <span class="inspector-chip">判断 ${escapeHtml(thesis ? "已有" : "缺失")}</span>
-          <span class="inspector-chip">压缩 ${summary.length}/3</span>
-          <span class="inspector-chip">关系 ${explicitRelationCount + wikilinkCount}</span>
+          <span class="inspector-chip">关系 ${Math.max(explicitRelationCount, wikilinkCount)}</span>
           <span class="inspector-chip">可能相关 ${themeInfo.badge}</span>
         </div>
         <div class="semantic-relation-groups">
@@ -4864,7 +4885,6 @@ export class EditorPane {
   permanentNoteMainPathSummaryV2(note, overview = {}) {
     const viewpoint = permanentNoteViewpointState(note);
     const thesis = viewpoint.thesis;
-    const summary = viewpoint.summary;
     const confirmed = viewpoint.confirmed;
     const writingInfo = this.noteWritingReadinessV2(note, overview);
     const writingContinuation = this.noteWritingContinuationV2(note, overview);
@@ -4879,12 +4899,6 @@ export class EditorPane {
       return {
         nextStep: "先写一句判断",
         summary: "先把这条笔记写成一句可复用的判断。"
-      };
-    }
-    if (summary.length < 3) {
-      return {
-        nextStep: "补成三句话压缩",
-        summary: "判断已经出现，但还缺三句话压缩。"
       };
     }
     if (!confirmed) {
@@ -4974,7 +4988,6 @@ export class EditorPane {
   permanentNoteDistillationStepV2(note, overview = {}, writingInfo = null) {
     const viewpoint = permanentNoteViewpointState(note);
     const thesis = viewpoint.thesis;
-    const summary = viewpoint.summary;
     const confirmed = viewpoint.confirmed;
     const relation = permanentNoteRelationState(overview);
     const relationState = relation.relationState;
@@ -4985,14 +4998,6 @@ export class EditorPane {
       return {
         status: "待开始",
         hint: "先写一句判断。",
-        actionLabel: "继续提纯",
-        focusTarget: "thesis"
-      };
-    }
-    if (summary.length < 3) {
-      return {
-        status: "进行中",
-        hint: "补齐三句话压缩。",
         actionLabel: "继续提纯",
         focusTarget: "thesis"
       };
@@ -5281,21 +5286,19 @@ export class EditorPane {
   renderPermanentNoteWritingPrepSection(note) {
     if (!note?.id) return "";
     const thesis = String(note.thesis || "").trim();
-    const summary = Array.isArray(note.threeLineSummary) ? note.threeLineSummary.filter((item) => String(item || "").trim()) : [];
     const boundary = String(note.boundaryOrCounterpoint || note.boundary_or_counterpoint || "").trim();
     const confirmed = String(note.distillationStatus || "").trim() === "confirmed";
     const explicitRelationCount = this.currentExplicitRelationCount();
     const hasRelation = Number(explicitRelationCount || 0) > 0;
     const checks = [
       ["一句话判断", Boolean(thesis), "补判断"],
-      ["三句话压缩", summary.length === 3, "补三句话"],
       ["至少一条关系", hasRelation, "去关联"],
       ["边界或反方", Boolean(boundary), "补边界"]
     ];
     const ready = confirmed && hasRelation && Boolean(boundary);
     const primaryAction = !confirmed ? "distillation" : !hasRelation ? "relations" : "writing";
     const primaryLabel = !confirmed ? "先确认观点" : !hasRelation ? "先补一条关系" : "进入写作";
-    const focusTarget = !confirmed && thesis && summary.length === 3 ? "confirm" : !boundary && confirmed ? "boundary" : "";
+    const focusTarget = !confirmed && thesis ? "confirm" : !boundary && confirmed ? "boundary" : "";
     return `
       <section class="permanent-workspace-card writing-prep-panel">
         <div class="semantic-relation-group-head">
@@ -5636,14 +5639,14 @@ export class EditorPane {
       if (!target) return;
       const targetName = String(target.getAttribute("name") || "thesis");
       target.value = draft;
-      const status = form.querySelector('select[name="distillationStatus"]');
-      if (status && String(status.value || "") === "missing") status.value = "draft";
-      this.refreshDistillationQuality(form);
+      const optionalDetails = target.closest("details.viewpoint-optional-details");
+      if (optionalDetails) optionalDetails.open = true;
+      target.dispatchEvent(new Event("input", { bubbles: true }));
       this.jumpToInspectorSection("[data-note-distillation-section]", {
         focus: true,
         focusSelector: `[data-note-distillation-form] textarea[name="${targetName}"]`
       });
-      this.onStatus("已把选中文本带入观点提纯区，请确认后保存草稿", "ok");
+      this.onStatus("已把选中文本带入当前观点补充区", "ok");
     }, 40);
     return true;
   }

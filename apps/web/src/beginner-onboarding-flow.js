@@ -8,81 +8,79 @@ function noteIdSet(notes = []) {
 
 export const SMART_NOTES_DEMO_WALKTHROUGH_STEPS = [
   {
-    key: "source-to-permanent",
-    title: "从记录到永久笔记",
-    note: "先看一条材料怎样经过转述，变成用户自己的判断。",
+    key: "first-judgment",
+    title: "看看当前观点怎样形成",
+    note: "先看一条材料怎样经过转述，成为当前观点；再看最初的问题、改变原因和依据。",
     action: "open-demo-note",
-    targetNoteId: "PERM-WRITING-STARTS-BEFORE-DRAFT",
+    targetNoteId: "PERM-PERMANENT-NOTE-IS-JUDGMENT",
     noteIds: [
       "GUIDE-SMART-NOTES-START",
       "SRC-SMART-NOTES",
       "FN-PHONE-CAPTURE-UNPROCESSED",
-      "LN-WRITING-AS-DAILY-PRACTICE",
-      "PERM-WRITING-STARTS-BEFORE-DRAFT"
+      "LN-PARAPHRASE-IS-FIRST-CHECK",
+      "PERM-PARAPHRASE-BEFORE-JUDGMENT",
+      "PERM-PERMANENT-NOTE-IS-JUDGMENT"
     ]
   },
   {
-    key: "connect-relation",
-    title: "补一条关系理由",
-    note: "查看正文链接和人工关系怎样共同进入关系网，再补一条你自己的理由。",
+    key: "first-relation",
+    title: "把关系变成以后看得懂的线索",
+    note: "正文链接已经会进入网络；再选择一条笔记，写一句它怎样影响当前观点。",
     action: "open-demo-note-relations",
     targetNoteId: "PERM-UNLINKED-PRACTICE",
     noteIds: ["PERM-UNLINKED-PRACTICE"]
   },
   {
-    key: "theme-index",
-    title: "读主题索引",
-    note: "看中心问题和关键笔记，而不是把索引当文件夹。",
-    action: "open-demo-note",
-    targetNoteId: "THEME-WHY-LINK-NOTES",
-    noteIds: ["THEME-WHY-LINK-NOTES", "THEME-WHAT-IS-PERMANENT-NOTE", "THEME-INDEX-TO-WRITING"]
-  },
-  {
-    key: "writing-outline",
-    title: "进入写作中心",
-    note: "从主题索引和已确认永久笔记生成文章提纲。",
+    key: "write-from-notes",
+    title: "看看观点怎样进入写作",
+    note: "从一个问题和已有观点开始组织文章，不必从空白页硬写。",
     action: "open-demo-writing",
     targetNoteId: "WRITE-SMART-NOTES-DEMO",
     noteIds: ["WRITE-SMART-NOTES-DEMO", "DRAFT-SMART-NOTES-DEMO"]
   },
-  {
-    key: "review-next",
-    title: "打开首页",
-    note: "只找下一步动作，不做大扫除。",
-    action: "open-demo-review",
-    targetNoteId: "GUIDE-TODAY-NEXT-STEP",
-    noteIds: ["GUIDE-TODAY-NEXT-STEP", "FN-PHONE-CAPTURE-UNPROCESSED", "LN-AI-KEEPS-CANDIDATE-STATE"]
-  }
 ];
+
+function normalizedCompletedSteps(value = []) {
+  const allowed = new Set(SMART_NOTES_DEMO_WALKTHROUGH_STEPS.map((step) => step.key));
+  return [...new Set((Array.isArray(value) ? value : []).map((item) => cleanText(item)).filter((key) => allowed.has(key)))];
+}
+
+export function completeSmartNotesDemoStep(completedSteps = [], stepKey = "") {
+  const completed = normalizedCompletedSteps(completedSteps);
+  const cleanKey = cleanText(stepKey);
+  return cleanKey && SMART_NOTES_DEMO_WALKTHROUGH_STEPS.some((step) => step.key === cleanKey)
+    ? [...new Set([...completed, cleanKey])]
+    : completed;
+}
 
 export function isSmartNotesDemoScope(notes = []) {
   const ids = noteIdSet(notes);
   return ids.has("GUIDE-SMART-NOTES-START") || ids.has("GUIDE-SN-001") || ids.has("SRC-SMART-NOTES");
 }
 
-export function buildSmartNotesDemoWalkthrough({ notes = [], selectedNoteId = "" } = {}) {
+export function buildSmartNotesDemoWalkthrough({ notes = [], completedSteps = [] } = {}) {
   const ids = noteIdSet(notes);
   if (!isSmartNotesDemoScope(notes)) return null;
-  const activeNoteId = cleanText(selectedNoteId);
+  const completed = normalizedCompletedSteps(completedSteps);
   const availableSteps = SMART_NOTES_DEMO_WALKTHROUGH_STEPS.map((step) => ({
     ...step,
     available: step.noteIds.some((id) => ids.has(id)) || ids.has(step.targetNoteId)
   }));
-  const activeIndex = Math.max(
-    0,
-    availableSteps.findIndex((step) => step.noteIds.includes(activeNoteId) || step.targetNoteId === activeNoteId)
-  );
+  const activeIndex = availableSteps.findIndex((step) => !completed.includes(step.key));
   const steps = availableSteps.map((step, index) => ({
     ...step,
-    done: index < activeIndex,
-    active: index === activeIndex
+    done: completed.includes(step.key),
+    active: index === activeIndex && !completed.includes(step.key)
   }));
-  const active = steps[activeIndex] || steps[0] || null;
+  const finished = activeIndex === -1;
+  const active = finished ? null : steps[activeIndex] || null;
   return {
     kind: "smart-notes-demo",
-    title: "Smart Notes Demo 导览",
-    note: active ? `下一步：${active.title}。${active.note}` : "按五步看完从材料到文章提纲的主路径。",
+    title: "从记录到写作",
+    note: finished ? "你已经看完第一条知识链：记录会形成当前观点，观点带着变化理由和关系进入写作。" : `下一步：${active.title}。${active.note}`,
     activeStepKey: active?.key || "",
+    completedCount: completed.length,
+    finished,
     steps
   };
 }
@@ -103,23 +101,33 @@ function smartNotesDemoActionCanRun(step = {}) {
   return !!action;
 }
 
+function walkthroughCurrent(flow = {}) {
+  const steps = Array.isArray(flow.steps) ? flow.steps : [];
+  const activeIndex = steps.findIndex((step) => step.active);
+  if (activeIndex >= 0) return { steps, activeIndex, active: steps[activeIndex], finished: false };
+  return {
+    steps,
+    activeIndex: steps.length,
+    active: { action: "open-demo-review", title: "完成体验", targetNoteId: "" },
+    finished: flow.finished === true
+  };
+}
+
 export function renderSmartNotesDemoWalkthrough(flow = {}, deps = {}) {
   const { escapeHtml = (value) => String(value ?? "") } = deps;
-  const steps = Array.isArray(flow.steps) ? flow.steps : [];
-  const activeIndex = Math.max(0, steps.findIndex((step) => step.active));
-  const active = steps[activeIndex] || steps[0] || {};
+  const { steps, activeIndex, active, finished } = walkthroughCurrent(flow);
   const action = active.action || "open-demo-note";
-  const actionLabel = smartNotesDemoActionLabel(active, activeIndex);
+  const actionLabel = finished ? "回到首页" : smartNotesDemoActionLabel(active, activeIndex);
   const canRunAction = smartNotesDemoActionCanRun(active);
   return `
     <div class="sidebar-flow-card" data-smart-notes-demo-walkthrough>
       <div>
-        <div class="sidebar-flow-kicker">Demo Walkthrough</div>
-        <div class="sidebar-flow-title">${escapeHtml(flow.title || "Smart Notes Demo 导览")}</div>
+        <div class="sidebar-flow-kicker">3 分钟示例</div>
+        <div class="sidebar-flow-title">${escapeHtml(flow.title || "从记录到写作")}</div>
         <div class="sidebar-flow-note">${escapeHtml(flow.note || "下一步只做一个动作。")}</div>
       </div>
       <div class="sidebar-flow-current" aria-label="Smart Notes demo 当前步骤">
-        <span>第 ${escapeHtml(activeIndex + 1)} / ${escapeHtml(steps.length || 5)} 步</span>
+        <span>${finished ? "已完成" : `第 ${activeIndex + 1} / ${steps.length || 3} 步`}</span>
         <strong>${escapeHtml(active.title || "继续 Demo 导览")}</strong>
       </div>
       <button
@@ -127,6 +135,7 @@ export function renderSmartNotesDemoWalkthrough(flow = {}, deps = {}) {
         type="button"
         data-sidebar-flow-action="${escapeHtml(action)}"
         data-sidebar-flow-note-id="${escapeHtml(active.targetNoteId || "")}"
+        data-sidebar-flow-step-key="${escapeHtml(active.key || "")}"
         ${canRunAction ? "" : "disabled"}
       >${escapeHtml(actionLabel)}</button>
     </div>
@@ -135,21 +144,19 @@ export function renderSmartNotesDemoWalkthrough(flow = {}, deps = {}) {
 
 export function renderSmartNotesDemoGuidePanel(flow = {}, deps = {}) {
   const { escapeHtml = (value) => String(value ?? "") } = deps;
-  const steps = Array.isArray(flow.steps) ? flow.steps : [];
-  const activeIndex = Math.max(0, steps.findIndex((step) => step.active));
-  const active = steps[activeIndex] || steps[0] || {};
+  const { steps, activeIndex, active, finished } = walkthroughCurrent(flow);
   const action = active.action || "open-demo-note";
-  const actionLabel = smartNotesDemoActionLabel(active, activeIndex);
+  const actionLabel = finished ? "回到首页" : smartNotesDemoActionLabel(active, activeIndex);
   const canRunAction = smartNotesDemoActionCanRun(active);
   return `
     <section class="demo-guide-panel-card" data-smart-notes-demo-guide>
       <div class="demo-guide-copy">
-        <span>Demo 导览</span>
-        <strong>${escapeHtml(flow.title || "Smart Notes Demo 导览")}</strong>
+        <span>3 分钟示例</span>
+        <strong>${escapeHtml(flow.title || "从记录到写作")}</strong>
         <p>${escapeHtml(flow.note || "下一步只做一个动作。")}</p>
       </div>
       <div class="demo-guide-current">
-        <span>第 ${escapeHtml(activeIndex + 1)} / ${escapeHtml(steps.length || 5)} 步</span>
+        <span>${finished ? "已完成" : `第 ${activeIndex + 1} / ${steps.length || 3} 步`}</span>
         <strong>${escapeHtml(active.title || "继续 Demo 导览")}</strong>
       </div>
       <button
@@ -157,6 +164,7 @@ export function renderSmartNotesDemoGuidePanel(flow = {}, deps = {}) {
         type="button"
         data-sidebar-flow-action="${escapeHtml(action)}"
         data-sidebar-flow-note-id="${escapeHtml(active.targetNoteId || "")}"
+        data-sidebar-flow-step-key="${escapeHtml(active.key || "")}"
         ${canRunAction ? "" : "disabled"}
       >${escapeHtml(actionLabel)}</button>
     </section>

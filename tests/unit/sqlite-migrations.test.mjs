@@ -50,6 +50,9 @@ test("applySqliteMigrations creates three database files when node:sqlite is ava
     assert.equal(permanentColumns.includes("thesis"), true);
     assert.equal(permanentColumns.includes("three_line_summary_json"), true);
     assert.equal(permanentColumns.includes("distillation_status"), true);
+    assert.equal(permanentColumns.includes("starting_question"), true);
+    assert.equal(permanentColumns.includes("viewpoint_history_json"), true);
+    assert.equal(permanentColumns.includes("pending_viewpoint_revision_json"), true);
 
     assert.equal(indexCardColumns.includes("thesis"), true);
     assert.equal(indexCardColumns.includes("three_line_summary_json"), true);

@@ -212,6 +212,9 @@ test("non-sqlite adopt helper rolls note and stores back when suggestion transit
       status: fixture.originalNote.status,
       thesis: fixture.originalNote.thesis,
       threeLineSummary: fixture.originalNote.threeLineSummary,
+      startingQuestion: "",
+      viewpointHistory: [],
+      pendingViewpointRevision: null,
       distillationStatus: fixture.originalNote.distillationStatus,
       authorship: fixture.originalNote.authorship,
       boundaryOrCounterpoint: fixture.originalNote.boundaryOrCounterpoint

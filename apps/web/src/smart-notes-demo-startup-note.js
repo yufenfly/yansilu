@@ -1,3 +1,5 @@
+export const SMART_NOTES_DEMO_GUIDE_DIRECTORY_ID = "dir_demo_smart_notes_product_thinking_guide";
+
 export function smartNotesDemoStartupNoteId({ result = {}, notes = [] } = {}) {
   const firstNoteId = String(result?.firstNoteId || "").trim();
   const guideById = firstNoteId

@@ -68,8 +68,9 @@ test("selection AI action applies the selected text as an editable distillation 
   assert.match(actionSource, /this\.renderRelated\("提炼这段文字"\)/);
   assert.match(actionSource, /textarea\[name="thesis"\]/);
   assert.match(actionSource, /textarea\[name="summary\$\{idx\}"\]/);
-  assert.match(actionSource, /status\.value = "draft"/);
-  assert.match(actionSource, /this\.refreshDistillationQuality\(form\)/);
+  assert.match(actionSource, /details\.viewpoint-optional-details/);
+  assert.match(actionSource, /optionalDetails\.open = true/);
+  assert.match(actionSource, /target\.dispatchEvent\(new Event\("input", \{ bubbles: true \}\)\)/);
   assert.match(actionSource, /this\.jumpToInspectorSection\("\[data-note-distillation-section\]"/);
   assert.doesNotMatch(actionSource, /save-note-distillation|onStateChange\("save-note/);
 });

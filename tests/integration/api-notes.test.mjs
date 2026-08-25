@@ -198,8 +198,8 @@ test("notes API creates, lists, loads, and updates markdown note", async (t) => 
     "It matters when the user wants to move from notes into structured prose."
   ]);
   assert.equal(createNote.json.item.distillationStatus, "confirmed");
-  assert.equal(createNote.json.item.thinkingStatus.status, "ready_for_index");
-  assert.equal(createNote.json.item.thinkingStatus.label, "待加入主题");
+  assert.equal(createNote.json.item.thinkingStatus.status, "needs_relation");
+  assert.equal(createNote.json.item.thinkingStatus.label, "待建立关系");
   assert.equal(
     createNote.json.item.boundaryOrCounterpoint,
     "This breaks down when the claim cannot be traced to a concrete note."
@@ -222,12 +222,12 @@ test("notes API creates, lists, loads, and updates markdown note", async (t) => 
   assert.equal(list.status, 200);
   assert.equal(list.json.total, 1);
   assert.equal(list.json.items[0].id, noteId);
-  assert.equal(list.json.items[0].thinkingStatus.status, "ready_for_index");
+  assert.equal(list.json.items[0].thinkingStatus.status, "needs_relation");
 
   const getNote = await getJson(baseUrl, `/api/v1/notes/${encodeURIComponent(noteId)}`);
   assert.equal(getNote.status, 200);
   assert.equal(getNote.json.item.id, noteId);
-  assert.equal(getNote.json.item.thinkingStatus.status, "ready_for_index");
+  assert.equal(getNote.json.item.thinkingStatus.status, "needs_relation");
   assert.equal(getNote.json.item.thesis, "Writing should start from reusable note units instead of blank drafting.");
   assert.deepEqual(getNote.json.item.threeLineSummary, [
     "Writing should start from reusable note units.",
@@ -247,6 +247,7 @@ test("notes API creates, lists, loads, and updates markdown note", async (t) => 
     body: "# Updated title line\n\nUpdated paragraph.",
     status: "active",
     thesis: "A durable writing flow begins from compressed claims, not blank pages.",
+    thesisChangeReason: "The updated note narrows the claim from all writing to durable writing flows.",
     threeLineSummary: [
       "A durable writing flow begins from compressed claims.",
       "That lowers the cost of structuring paragraphs and arguments.",
@@ -272,7 +273,7 @@ test("notes API creates, lists, loads, and updates markdown note", async (t) => 
     "It is most useful when the system turns notes into writing inputs."
   ]);
   assert.equal(update.json.item.distillationStatus, "draft");
-  assert.equal(update.json.item.thinkingStatus.status, "ready_for_index");
+  assert.equal(update.json.item.thinkingStatus.status, "needs_confirmation");
   assert.equal(update.json.item.originalityStatus, "pass");
   assert.equal(update.json.item.originalitySimilarity, 0.18);
   assert.deepEqual(update.json.item.authorship, { user_confirmed: true, ai_assisted: false });
@@ -387,6 +388,24 @@ test("notes API creates, lists, loads, and updates markdown note", async (t) => 
   assert.equal(confirmDistillation.status, 200);
   assert.equal(confirmDistillation.json.item.distillationStatus, "confirmed");
   assert.deepEqual(confirmDistillation.json.item.authorship, { user_confirmed: true, ai_assisted: false });
+
+  const explicitRelation = await postJson(
+    baseUrl,
+    `/api/v1/notes/${encodeURIComponent(queueSeed.json.item.id)}/relations`,
+    {
+      toNoteId: noteId,
+      relationType: "supports",
+      rationale: "The updated note supports this judgment."
+    }
+  );
+  assert.equal(explicitRelation.status, 201, JSON.stringify(explicitRelation.json));
+
+  const relatedConfirmedNote = await getJson(
+    baseUrl,
+    `/api/v1/notes/${encodeURIComponent(queueSeed.json.item.id)}`
+  );
+  assert.equal(relatedConfirmedNote.status, 200);
+  assert.equal(relatedConfirmedNote.json.item.thinkingStatus.status, "ready_for_index");
 
   const queueLimitBlocker = await postJson(baseUrl, "/api/v1/notes", {
     directoryId,
@@ -1641,6 +1660,49 @@ test("notes AI analysis API stores reviewable local candidates without confirmin
   assert.equal(adoptedField.json.artifact.payload.fieldSuggestion.target.field, "thesis");
   assert.equal(adoptedField.json.artifact.payload.fieldSuggestion.target.id, draftTarget.json.item.id);
   assert.equal(adoptedField.json.artifact.payload.adoptedNoteId, draftTarget.json.item.id);
+
+  const existingViewpointAnalysis = await postJson(baseUrl, `/api/v1/notes/${encodeURIComponent(source.json.item.id)}/ai-analysis`, {
+    localModel: "qwen2.5:7b",
+    localModelResponse: {
+      distilledViewpoint: {
+        thesis: "AI 可以提出关系判断，但用户仍需确认它是否成为自己的观点。",
+        threeLineSummary: []
+      }
+    }
+  });
+  assert.equal(existingViewpointAnalysis.status, 200, JSON.stringify(existingViewpointAnalysis.json));
+  const existingViewpointArtifact = existingViewpointAnalysis.json.item.reviewItems.artifacts.find(
+    (artifact) => artifact.type === "InsightCard" && artifact.payload?.fieldSuggestion?.target?.field === "thesis"
+  );
+  assert.ok(existingViewpointArtifact, "expected a thesis suggestion for a note with an existing viewpoint");
+  const adoptedExistingViewpoint = await postJson(
+    baseUrl,
+    `/api/v1/ai/inbox/${encodeURIComponent(existingViewpointArtifact.id)}/adopt-field-suggestion`,
+    { confirm: true }
+  );
+  assert.equal(adoptedExistingViewpoint.status, 200, JSON.stringify(adoptedExistingViewpoint.json));
+  assert.equal(adoptedExistingViewpoint.json.note.thesis, "AI 可以提出关系判断，但用户仍需确认它是否成为自己的观点。");
+  assert.equal(adoptedExistingViewpoint.json.note.distillationStatus, "draft");
+  assert.deepEqual(adoptedExistingViewpoint.json.note.viewpointHistory, []);
+  assert.equal(
+    adoptedExistingViewpoint.json.note.pendingViewpointRevision?.previousThesis,
+    "AI 关系候选应该帮助用户看见关系，而不是自动替用户确认关系。"
+  );
+  assert.equal(adoptedExistingViewpoint.json.note.pendingViewpointRevision?.reason, "采纳 AI 建议作为待确认草稿。");
+
+  const committedExistingViewpoint = await patchJson(
+    baseUrl,
+    `/api/v1/permanent-notes/${encodeURIComponent(source.json.item.id)}/distillation`,
+    {
+      thesis: adoptedExistingViewpoint.json.note.thesis,
+      thesisChangeReason: "用户核对来源后确认这条新判断。",
+      commitViewpointChange: true,
+      distillationStatus: "draft"
+    }
+  );
+  assert.equal(committedExistingViewpoint.status, 200, JSON.stringify(committedExistingViewpoint.json));
+  assert.equal(committedExistingViewpoint.json.item.pendingViewpointRevision, null);
+  assert.equal(committedExistingViewpoint.json.item.viewpointHistory.at(-1)?.reason, "用户核对来源后确认这条新判断。");
 
   const adoptedFieldAgain = await postJson(baseUrl, `/api/v1/ai/inbox/${encodeURIComponent(fieldArtifact.id)}/adopt-field-suggestion?canonical=true`, {
     confirm: true

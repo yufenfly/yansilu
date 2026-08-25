@@ -22,7 +22,7 @@ test("permanent note sidebar model counts outgoing and incoming explicit relatio
   assert.equal(permanentNoteSidebarExplicitRelationCount({ relationState: "loaded", relations }), 2);
 });
 
-test("permanent note sidebar model excludes hidden and wikilink-only relations from formal relation counts", () => {
+test("permanent note sidebar model counts body wikilinks and excludes hidden relations", () => {
   const relations = {
     outgoingLinks: [
       { id: "formal", relationType: "supports" },
@@ -33,8 +33,8 @@ test("permanent note sidebar model excludes hidden and wikilink-only relations f
   };
 
   const explicit = explicitPermanentNoteRelations(relations);
-  assert.deepEqual(explicit.all.map((item) => item.id), ["formal"]);
-  assert.equal(permanentNoteSidebarExplicitRelationCount({ relationState: "loaded", relations }), 1);
+  assert.deepEqual(explicit.all.map((item) => item.id), ["formal", "wiki"]);
+  assert.equal(permanentNoteSidebarExplicitRelationCount({ relationState: "loaded", relations }), 2);
 });
 
 test("permanent note sidebar model reports weak signals without marking the note connected", () => {

@@ -4,7 +4,10 @@ import {
   currentPermanentNoteDistillationPrefill,
   emptyPermanentNoteDistillationPrefill,
   normalizePermanentNoteDistillationPrefill,
-  permanentNoteDistillationFormValues
+  permanentNoteDistillationFormValues,
+  permanentNoteViewpointBaseline,
+  permanentNoteViewpointSourceCandidates,
+  permanentNoteViewpointHasChanged
 } from "./permanent-note-distillation-model.js";
 import {
   renderPermanentNoteDistillationSection as renderPermanentNoteDistillationSectionView
@@ -14,9 +17,29 @@ export class PermanentNoteDistillationController {
   constructor(host) {
     this.host = host;
     this.prefillState = emptyPermanentNoteDistillationPrefill("");
+    this.viewpointDraftByNoteId = new Map();
+    this.currentDraftScope = this.draftScope();
+  }
+
+  draftScope() {
+    return String(this.host?.vaultScope?.() || "").trim();
+  }
+
+  syncDraftScope() {
+    const nextScope = this.draftScope();
+    if (nextScope === this.currentDraftScope) return;
+    this.viewpointDraftByNoteId.clear();
+    this.prefillState = emptyPermanentNoteDistillationPrefill("");
+    this.currentDraftScope = nextScope;
+  }
+
+  clearDrafts() {
+    this.viewpointDraftByNoteId.clear();
+    this.prefillState = emptyPermanentNoteDistillationPrefill("");
   }
 
   setPrefill(noteId = "", options = {}) {
+    this.syncDraftScope();
     const host = this.host;
     const cleanNoteId = String(noteId || "").trim();
     const preferredTemplateVariant = cleanNoteId
@@ -25,14 +48,27 @@ export class PermanentNoteDistillationController {
     const rememberedTemplateVariant = cleanNoteId
       ? host.templateVariantPreferenceMeta("distillation", options?.draftVariants || [])
       : { key: "", label: "" };
-    this.prefillState = normalizePermanentNoteDistillationPrefill(cleanNoteId, options, {
+    const hasExplicitViewpointDraft = Object.prototype.hasOwnProperty.call(options || {}, "viewpointDraft");
+    if (hasExplicitViewpointDraft && cleanNoteId) {
+      if (options.viewpointDraft && typeof options.viewpointDraft === "object") {
+        this.viewpointDraftByNoteId.set(cleanNoteId, { ...options.viewpointDraft });
+      } else {
+        this.viewpointDraftByNoteId.delete(cleanNoteId);
+      }
+    }
+    const viewpointDraft = cleanNoteId ? this.viewpointDraftByNoteId.get(cleanNoteId) || null : null;
+    this.prefillState = normalizePermanentNoteDistillationPrefill(cleanNoteId, { ...options, viewpointDraft }, {
       preferredTemplateVariant,
       rememberedTemplateVariant
     });
   }
 
   currentPrefill(noteId = "") {
-    return currentPermanentNoteDistillationPrefill(this.prefillState, noteId);
+    this.syncDraftScope();
+    const current = currentPermanentNoteDistillationPrefill(this.prefillState, noteId);
+    const cleanNoteId = String(noteId || "").trim();
+    const viewpointDraft = cleanNoteId ? this.viewpointDraftByNoteId.get(cleanNoteId) || null : null;
+    return viewpointDraft ? { ...current, viewpointDraft: { ...viewpointDraft } } : current;
   }
 
   renderSection(note) {
@@ -41,6 +77,12 @@ export class PermanentNoteDistillationController {
       noteType: host.resolvedNoteType(note),
       explicitRelationCount: host.currentExplicitRelationCount(),
       distillationPrefill: this.currentPrefill(note?.id || ""),
+      viewpointBaseline: permanentNoteViewpointBaseline(note),
+      viewpointSourceCandidates: permanentNoteViewpointSourceCandidates(
+        note,
+        host.currentSemanticRelations,
+        host.state?.notes
+      ),
       aiWorkspaceHtml: host.renderNoteEmbeddedAiWorkspaceForNote(note?.id || "")
     });
   }
@@ -78,14 +120,33 @@ export class PermanentNoteDistillationController {
   }
 
   syncDraftFromForm(form) {
+    this.syncDraftScope();
     const host = this.host;
     const note = host.activeNote();
     if (!note?.id || !form) return;
     const values = permanentNoteDistillationFormValues(form);
-    applyPermanentNoteDistillationToNote(note, {
-      ...values,
-      distillationStatus: values.distillationStatus === "confirmed" ? "draft" : values.distillationStatus
-    });
+    this.syncChangeReasonVisibility(form, values);
+    this.prefillState = {
+      ...this.currentPrefill(note.id),
+      noteId: note.id,
+      viewpointDraft: { ...values }
+    };
+    this.viewpointDraftByNoteId.set(note.id, { ...values });
+  }
+
+  syncChangeReasonVisibility(form, values = permanentNoteDistillationFormValues(form)) {
+    const field = form?.querySelector?.("[data-viewpoint-change-reason]");
+    const textarea = field?.querySelector?.('[name="thesisChangeReason"]');
+    const changed = permanentNoteViewpointHasChanged(values.originalThesis, values.thesis);
+    if (field) field.hidden = !changed;
+    if (textarea) textarea.required = changed;
+    return changed;
+  }
+
+  refreshQuality(form) {
+    const values = permanentNoteDistillationFormValues(form);
+    this.syncChangeReasonVisibility(form, values);
+    return values;
   }
 
   commitTemplateVariant(choiceBox, action = "replace") {
@@ -185,6 +246,16 @@ export class PermanentNoteDistillationController {
       return;
     }
     const values = permanentNoteDistillationFormValues(form);
+    if (!values.thesis) {
+      host.onStatus("先用一句自己的话写下当前观点", "warn");
+      form.querySelector?.('[name="thesis"]')?.focus?.();
+      return;
+    }
+    if (this.syncChangeReasonVisibility(form, values) && !values.thesisChangeReason) {
+      host.onStatus("观点变了，请用一句话说明这次为什么改变", "warn");
+      form.querySelector?.('[name="thesisChangeReason"]')?.focus?.();
+      return;
+    }
     const savedEditor = await host.autoSaveActiveNote("distillation");
     if (savedEditor === false) return;
     if (!host.isActiveNoteId(noteId)) return;
@@ -192,8 +263,12 @@ export class PermanentNoteDistillationController {
       noteId,
       thesis: values.thesis,
       threeLineSummary: values.threeLineSummary,
+      startingQuestion: values.startingQuestion,
+      thesisChangeReason: values.thesisChangeReason,
+      viewpointChangeSourceNoteIds: values.viewpointChangeSourceNoteIds,
+      commitViewpointChange: true,
       boundaryOrCounterpoint: values.boundaryOrCounterpoint,
-      distillationStatus: values.distillationStatus,
+      distillationStatus: "confirmed",
       authorship: values.distillationStatus === "confirmed" ? { user_confirmed: true, ai_assisted: false } : undefined
     });
     if (!saved) return;
@@ -201,7 +276,7 @@ export class PermanentNoteDistillationController {
     applyPermanentNoteDistillationToNote(note, values, {
       confirmAuthorship: values.distillationStatus === "confirmed"
     });
-    this.setPrefill(noteId, { boundaryDraft: "" });
+    this.setPrefill(noteId, { boundaryDraft: "", viewpointDraft: null });
     host.renderThinkingStatus();
     host.permanentNoteWorkspace?.().reset(noteId);
     host.renderRelated();
@@ -220,8 +295,13 @@ export class PermanentNoteDistillationController {
     const form = host.els.result?.querySelector?.("[data-note-distillation-form]");
     if (form) {
       const values = permanentNoteDistillationFormValues(form);
-      if (!values.thesis || values.threeLineSummary.length !== 3) {
-        host.onStatus("整理到正文前需要补全一句话判断和三句话压缩", "warn");
+      if (!values.thesis) {
+        host.onStatus("先用一句自己的话写下当前观点", "warn");
+        return;
+      }
+      if (this.syncChangeReasonVisibility(form, values) && !values.thesisChangeReason) {
+        host.onStatus("观点变了，请用一句话说明这次为什么改变", "warn");
+        form.querySelector?.('[name="thesisChangeReason"]')?.focus?.();
         return;
       }
       const savedEditor = await host.autoSaveActiveNote("distillation-confirm");
@@ -231,6 +311,10 @@ export class PermanentNoteDistillationController {
         noteId,
         thesis: values.thesis,
         threeLineSummary: values.threeLineSummary,
+        startingQuestion: values.startingQuestion,
+        thesisChangeReason: values.thesisChangeReason,
+        viewpointChangeSourceNoteIds: values.viewpointChangeSourceNoteIds,
+        commitViewpointChange: true,
         boundaryOrCounterpoint: values.boundaryOrCounterpoint,
         distillationStatus: "draft"
       });
@@ -240,7 +324,7 @@ export class PermanentNoteDistillationController {
         ...values,
         distillationStatus: ""
       });
-      this.setPrefill(noteId, { boundaryDraft: "" });
+      this.setPrefill(noteId, { boundaryDraft: "", viewpointDraft: null });
     }
     const confirmed = await host.onStateChange("confirm-note-distillation", { noteId });
     if (!confirmed) return;

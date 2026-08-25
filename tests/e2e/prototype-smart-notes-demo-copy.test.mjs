@@ -24,10 +24,10 @@ test("prototype smart notes demo walkthrough uses readable title actions", async
   }, 15000);
 
   await waitFor(async () => {
-    const walkthroughText = await page.locator("[data-smart-notes-demo-walkthrough]").textContent();
-    assert.match(String(walkthroughText || ""), /Smart Notes Demo 导览/);
-    assert.match(String(walkthroughText || ""), /第 1 \/ 5 步/);
-    assert.match(String(walkthroughText || ""), /从记录到永久笔记/);
+    const walkthroughText = await page.locator("[data-smart-notes-demo-guide]").textContent();
+    assert.match(String(walkthroughText || ""), /从记录到写作/);
+    assert.match(String(walkthroughText || ""), /第 1 \/ 3 步/);
+    assert.match(String(walkthroughText || ""), /看看当前观点怎样形成/);
     assert.match(String(walkthroughText || ""), /打开第 1 步笔记/);
     assert.doesNotMatch(String(walkthroughText || ""), /打开“写作不是最后一步”/);
     assert.doesNotMatch(String(walkthroughText || ""), /\b(?:PN-SN|WP-SN|IC-SN)-/);

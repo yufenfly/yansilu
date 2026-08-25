@@ -50,8 +50,8 @@ test("permanent note workspace renders viewpoint and relation tabs", () => {
 
   assert.match(html, /data-permanent-note-workspace data-note-id="note-a"/);
   assert.match(html, /data-permanent-workspace-tab="viewpoint"/);
-  assert.match(html, />提炼<\/button>/);
-  assert.doesNotMatch(html, />观点<\/button>/);
+  assert.match(html, />当前观点<\/button>/);
+  assert.match(html, />怎么形成的<\/button>/);
   assert.match(html, /data-permanent-workspace-tab="relations"/);
   assert.match(html, /data-note-distillation-section/);
   assert.match(html, /data-note-relations-section/);
@@ -89,6 +89,7 @@ test("permanent note workspace controller refreshes only the current mounted not
   const controller = new PermanentNoteWorkspaceController(app);
 
   assert.equal(controller.renderDeferredWorkspace({ id: "note-a" }, { body: "" }).includes("data-note-distillation-section"), true);
+  assert.match(controller.renderDeferredWorkspace({ id: "note-a" }, { body: "" }), /这条观点怎么形成的/);
   assert.equal(controller.refreshSnapshot({ id: "note-a" }, { body: "" }), true);
   assert.match(mountedWorkspace.outerHTML, /data-permanent-note-workspace/);
   assert.equal(controller.currentTab(), "viewpoint");
